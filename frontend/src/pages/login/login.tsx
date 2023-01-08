@@ -5,9 +5,12 @@ import { Navigate } from 'react-router';
 import Google from './google';
 import Loader from '../../template/loading';
 import fetch_api from '../../fetch/fetch';
+import Cookies from 'universal-cookie';
 
 const Login = () => {
-    const {isLoggedin, setIsLoggedin} = useContext(ctx);
+    const cookies = new Cookies();
+
+    const { isLoggedin, setIsLoggedin } = useContext(ctx);
 
     const [active_sign, setActive_sign] = useState(true);
     // const isLoggedin = useContext(ctx);
@@ -17,30 +20,35 @@ const Login = () => {
     const [username, setUsername] = useState('user@userland.com');
     const [password, setPassword] = useState('1234');
 
+    const [error, setError] = useState(false);
 
     const login_post = async (e: any) => {
         e.preventDefault();
         setLoading(true);
         console.log(username)
         fetch_api('login?'
-        + new URLSearchParams({
-            username: username,
-            pw: password,
-        })
-        ,
-            {
-                method: 'GET',
-                headers: {
-                    'Access-Control-Allow-Origin': 'http://localhost:3000/'
-                }
-            }
+            + new URLSearchParams({
+                email: username,
+                pw: password,
+            }),
+            'GET'
+            , (data: any) => {
+                setTimeout(() => {
+                    if(!data.token) {
+                        setError(data.message || 'An unknown error occured');
+                        setLoading(false);
+                        return;
+                    }
 
+                
+                    if(data.token) {
+                        cookies.set('token', data.token, { path: '/', maxAge: 3600 });
+                        setIsLoggedin(true);
+                    }
+                }, 1000);
+            }
         )
 
-        setTimeout(() => {
-            setLoading(false);
-            // setIsLoggedin(true);
-        }, 2000);
     }
 
     return (
@@ -48,50 +56,51 @@ const Login = () => {
         <div className={styles.login}>
             <div className={styles.login_card}>
                 <div className={styles.login_sign_switch}>
-                    <div className={styles.login_sign_switch_signin + ' ' + (active_sign ? styles.active : '')} onClick={()=>setActive_sign(true)}>SIGN IN</div>
-                    <div className={styles.login_sign_switch_signup + ' ' + (!active_sign ? styles.active : '')} onClick={()=>setActive_sign(false)}>SIGN UP</div>
-                    <div className={styles.login_sign_line + ' '  + (!active_sign ? styles.active : '')}/>
+                    <div className={styles.login_sign_switch_signin + ' ' + (active_sign ? styles.active : '')} onClick={() => setActive_sign(true)}>SIGN IN</div>
+                    <div className={styles.login_sign_switch_signup + ' ' + (!active_sign ? styles.active : '')} onClick={() => setActive_sign(false)}>SIGN UP</div>
+                    <div className={styles.login_sign_line + ' ' + (!active_sign ? styles.active : '')} />
                 </div>
-                
+
                 {loading && <Loader /> ||
-                <div className={styles.login_sign + ' ' + (!active_sign ? styles.active : '')} >
-                    <div className={styles.login_sign_signin}>
-                        <form>
-                            <input type="text" placeholder='email / username' onChange={(e:any)=>setUsername(e.target.value)} defaultValue={username}/>
-                            <input type="password" placeholder='Password' onChange={(e:any)=>setPassword(e.target.value)} defaultValue={password}/>
-                            <br/>
-                            <button type="submit" onClick={login_post} className={styles.login__signInButton}>Sign In</button>
+                    <div className={styles.login_sign + ' ' + (!active_sign ? styles.active : '')} >
+                        <div className={styles.login_sign_signin}>
+                            <form>
+                                <input type="text" placeholder='email / username' onChange={(e: any) => setUsername(e.target.value)} defaultValue={username} autoFocus={true}/>
+                                <input type="password" placeholder='Password' onChange={(e: any) => setPassword(e.target.value)} defaultValue={password} />
+                                <br />
+                                <button type="submit" onClick={login_post} className={styles.login__signInButton}>Sign In</button>
 
-                            {/* <button className={styles.google_sign_in}></button> */}
-                            {/* forgot */}
-                            <div className={styles.login_sign_forgot}>
-                                <a href="#">Forgot your password?</a>
-                            </div>
-                        </form>
-        
-                    </div>
-                    <div className={styles.login_sign_signup }>
-                        <h1>Sign Up</h1>
-                        <form>
-                            <div>
-                            <input type="text" />
-                            <h5>E-mail</h5>
-                            <input type="text"  />
-                            <h5>Password</h5>
-                            <input type="password"/>
-                            </div>
-                            <div>
+                                {/* <button className={styles.google_sign_in}></button> */}
+                                {/* forgot */}
+                                <div className={styles.login_sign_forgot}>
+                                    <a href="#">Forgot your password?</a>
+                                </div>
+                            </form>
+                            {error && <div className={styles.login_sign_error}>{error}</div>}
 
-                            <button type="submit" onClick={() => setLoading(true)} className={styles.login__signInButton}>Sign Up</button>
-                            </div>
-                        </form>
+                        </div>
+                        <div className={styles.login_sign_signup}>
+                            <h1>Sign Up</h1>
+                            <form>
+                                <div>
+                                    <input type="text" />
+                                    <h5>E-mail</h5>
+                                    <input type="text" />
+                                    <h5>Password</h5>
+                                    <input type="password" />
+                                </div>
+                                <div>
 
-                    </div>
+                                    <button type="submit" onClick={() => setLoading(true)} className={styles.login__signInButton}>Sign Up</button>
+                                </div>
+                            </form>
 
-                </div>}
-               
-               
-               
+                        </div>
+
+                    </div>}
+
+
+
                 {/* <h1>Login</h1>
                 <form>
                     <h5>E-mail</h5>
@@ -106,8 +115,8 @@ const Login = () => {
                 <button className={styles.login__registerButton}>Create your Amazon Account</button>
 
             */}
-                </div> 
-                
+            </div>
+
 
         </div>
     )

@@ -3,7 +3,7 @@ import fetch_api from "../fetch/fetch"
 
 const Migrations = () => {
     useEffect(() => {
-        fetch_api('migrations', (data: any) => {
+        fetch_api('migrations', 'GET', (data: any) => {
             console.log(data)
         })
     }, [])

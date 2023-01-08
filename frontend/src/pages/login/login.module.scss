@@ -156,7 +156,20 @@
             }
 
         }
+        .login_sign_error{
+           
+            border-radius: 5px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+          
+            animation-delay: .6s;
+            color: red;
+            text-align: center;
+            font-weight: 600;
 
+
+        }
         :global{
             form{
                 width: 100%;

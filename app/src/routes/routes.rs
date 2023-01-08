@@ -39,56 +39,32 @@ pub async fn gen_routes() {
         let users = Arc::new(init_users());
         
         let login_route = warp::path!("api" / "login")
-            // .and(with_users(users.clone()))
-            // .and(warp::query::<LoginRequest>())
-            // .and_then(login_handler);
-            .map(|| "Hello, world!");
+            .and(with_users(users.clone()))
+            .and(warp::query::<LoginRequest>())
+            .and_then(login_handler);
 
         let user_route = warp::path!("api" / "user")
             .and(with_auth(Role::User))
             .and_then(user_handler);
+
         let admin_route = warp::path!("api" / "admin")
             .and(with_auth(Role::Admin))
             .and_then(admin_handler);
 
-        //     login_route
-            // .and(
-            //     // .or(user_route)
-            //     // .or(admin_route)
-            // );
-            // .recover(error::handle_rejection);
-        let cors = warp::cors()
-            .allow_any_origin();
-            // .allow_methods(vec!["GET", "POST", "DELETE"]);
-            // .allow_origin("http://localhost")
-            // // add add Access-Control-Allow-Origin "*"
-            
-            // .allow_methods(vec!["POST", "GET"]);
-        let mut headers = HeaderMap::new();
-        headers.insert("Access-Control-Allow-Origin", HeaderValue::from_static("*"));
-        headers.insert("Access-Control-Allow-Methods", HeaderValue::from_static("POST, GET, OPTIONS, PUT, DELETE"));
-        headers.insert("Access-Control-Allow-Headers", HeaderValue::from_static("Access-Control-Allow-Headers, Access-Control-Request-Method, Access-Control-Request-Headers, Origin, Accept, X-Requested-With, Content-Type"));
-        headers.insert("Access-Control-Allow-Credentials", HeaderValue::from_static("true"));
-
-        // let response_headers = warp::reply::with::headers(headers);
-
-
-        let routes = login_route.with(warp::reply::with::headers(headers));
+   
+        let routes = login_route
+        .or(user_route)
+        .or(admin_route)
+        .recover(error::handle_rejection);
       
-        let cors = warp::cors().allow_any_origin()
-        .allow_headers(vec!["Access-Control-Allow-Headers", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Origin", "Accept", "X-Requested-With", "Content-Type"])
-        .allow_methods(&[Method::GET, Method::POST, Method::PUT, Method::PATCH, Method::DELETE, Method::OPTIONS, Method::HEAD]);
+        let cors = warp::cors()
+        .allow_any_origin()
+        .allow_headers(vec!["Access-Control-Allow-Origin", "Origin", "Accept", "X-Requested-With", "Content-Type"])
+        .allow_methods(&[Method::GET, Method::POST]);
 
-        
-
-        warp::serve(routes.with(cors))
+    warp::serve(routes.with(cors))
         .run(([127, 0, 0, 1], 3030))
         .await;
-       // allows cors for port 80 on same domain
-    // .with(warp::cors().allow_any_origin())
-//     warp::serve(routes.with(warp::cors().allow_any_origin()))
-//         .run(([127, 0, 0, 1], 3030))
-//         .await;
 }
 
 

@@ -5,8 +5,11 @@ const config = {
     apiUrl: 'http://127.0.0.1:3030/api/'
 }
 
-const fetch_api = (url, options = {}, callback = (_) => {}) => {
-    fetch(config.apiUrl + url, options).then(res => res.json()).then(data => {
+const fetch_api = (url, method = "GET", callback = (_) => {}) => {
+    fetch(config.apiUrl + url, {
+        method: method,
+
+    }).then(res => res.json()).then(data => {
         callback(data)
     })
 }

@@ -9,6 +9,7 @@ import Login from './pages/login/login';
 import Container from './template/container';
 import {  notification } from 'antd';
 import toast, { Toaster } from 'react-hot-toast';
+import Cookies from 'universal-cookie';
 
 
 const root = ReactDOM.createRoot(
@@ -18,8 +19,9 @@ const root = ReactDOM.createRoot(
 	// create conetex for types const [isLoggedin, setIsLoggedin] = useState(false);
 export const ctx = createContext({isLoggedin: false, setIsLoggedin: (value: boolean) => {}});
 const App = () => {
-	const [cachedLoggedIn, setCachedLoggedIn] = useState(false);
-	const [isLoggedin, setIsLoggedin] = useState(false);	
+    const cookies = new Cookies();
+	const [isLoggedin, setIsLoggedin] = useState(cookies.get('token') !== undefined);	
+	const [cachedLoggedIn, setCachedLoggedIn] = useState(isLoggedin);
 	const [api, contextHolder] = notification.useNotification();
 
 	useEffect(() => {
@@ -39,6 +41,8 @@ const App = () => {
 		}
 		}, 500);
 	}, [isLoggedin]);
+
+
 
 	return (
 		<ctx.Provider value={{isLoggedin, setIsLoggedin}} >
