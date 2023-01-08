@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  database:
+    image: mysql:8.0
+    container_name: "bank_db"
+    command: "--sql-mode='' --log-bin --default-authentication-plugin=mysql_native_password --collation-server=utf8_unicode_ci --character-set-server=utf8"
+    restart: "unless-stopped"
+    environment:
+      - MYSQL_ROOT_USER=root
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    volumes:
+      - ./database:/var/lib/mysql
+      - ./log:/var/log
+      - ./sql:/root
+    ports:
+      - "3306:3306"
+    security_opt:
+      - seccomp:unconfined
+
+
+   

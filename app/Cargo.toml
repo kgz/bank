@@ -1,0 +1,18 @@
+[package]
+name = "bank"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+mysql ='*'
+tokio = { version = "1", features = ["full"] }
+warp = "0.3"
+migrations = {path = "..\\migrations"}
+serde_json = "*"
+warp-sessions = "*"
+serde = "*"
+thiserror = "*"
+chrono = "*"
+jsonwebtoken = "=7.2"
