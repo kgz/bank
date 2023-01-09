@@ -1,3 +1,6 @@
+use crate::user::roles;
+use crate::user::roles::roles::get_roles_from_code;
+
 use super::auth::{with_auth, Role, self};
 use super::error::{Error::*, self};
 use mysql::serde::{Serialize, Deserialize};
@@ -8,7 +11,6 @@ use std::collections::HashMap;
 use std::convert::Infallible;
 use std::sync::Arc;
 use warp::{reject, reply, Filter, Rejection, Reply};
-
 
 pub(crate) type Result<T> = std::result::Result<T, error::Error>;
 pub(crate) type WebResult<T> = std::result::Result<T, Rejection>;
@@ -27,7 +29,11 @@ pub struct LoginRequest {
     pub email: String,
     pub pw: String,
 }
+#[derive(Debug, Deserialize)]
 
+pub struct GetCode {
+    pub code: String,
+}
 #[derive(Serialize)]
 pub struct LoginResponse {
     pub token: String,
@@ -51,10 +57,28 @@ pub async fn gen_routes() {
             .and(with_auth(Role::Admin))
             .and_then(admin_handler);
 
-   
+        let get_perm = warp::path!("api" / "get_perm")
+            .and(warp::query::<GetCode>())
+            .map(
+                |body: GetCode|  {
+                    println!("{:?}", body.code);
+                    let r = get_roles_from_code(body.code.as_str());
+                    // if err
+
+                    if r.is_ok() {
+                        return reply::with_status(reply::json(&r.unwrap()), StatusCode::OK);
+                    }
+                    else {
+                        return reply::with_status(reply::json(&r.unwrap_err()), StatusCode::BAD_REQUEST);
+                    }
+                }
+            );
+    
+        
         let routes = login_route
         .or(user_route)
         .or(admin_route)
+        .or(get_perm)
         .recover(error::handle_rejection);
       
         let cors = warp::cors()

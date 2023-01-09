@@ -10,7 +10,9 @@ const Container = (props: any) => {
     return (
         <span className={styles.main}>
             {isLoggedin &&  <Header /> }
-            {children}
+            <div className={isLoggedin ? styles.main_content : ''}>
+                {children}
+            </div>
         </span>
     );
 };

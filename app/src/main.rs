@@ -20,6 +20,9 @@ mod api {
     pub mod migrations;
 }
 
+mod user {
+    pub mod roles;
+}
 
 #[allow(dead_code)]
 fn create_hello()  {
