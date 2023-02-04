@@ -1,4 +1,3 @@
-use std::{collections::HashMap, borrow::Cow};
 
 /**
  * Database module
@@ -7,8 +6,7 @@ use std::{collections::HashMap, borrow::Cow};
  * @description Database module
  * @author Mat Frayne
  */
-use mysql::{prelude::Queryable, serde_json::{self, json}};
-use serde::{Serialize, Deserialize};
+use mysql::{prelude::Queryable};
 
 pub trait Database {
     fn query(&self, query: &str) -> Ret;
@@ -124,7 +122,7 @@ impl Database for DB {
         let affected = pool.affected_rows();
         let mut headers = Vec::new();
 
-        if(result.len() == 0) {
+        if result.len() == 0 {
             let out = Ret {
                 last: last,
                 affected: affected,

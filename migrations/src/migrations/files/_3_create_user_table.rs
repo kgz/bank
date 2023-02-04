@@ -30,6 +30,6 @@ pub fn run () {
         // let q:&str = "INSERT INTO `test` (`name`) VALUES ('?')";
     // let args: Vec<&str> = vec!["hello"];
     // let q:String = db.prepare(q, &args);
-    let r = db.query(&q);
+    let _r = db.query(&q);
     
 }

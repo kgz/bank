@@ -12,17 +12,7 @@ const Header = () => {
             {/* <div className={styles.header__search}>
                 <input type="text" placeholder="Search" />
             </div> */}
-            <div className={styles.header__nav}>
-                <div className={styles.header__nav__item}>
-                    <NavLink to="/">Dashboard</NavLink>
-                </div>
-                <div className={styles.header__nav__item}>
-                    <NavLink to="/migrations">Migrations</NavLink>
-                </div>
-                <div className={styles.header__nav__item}>
-                    <NavLink to="/login">Login</NavLink>
-                </div>
-            </div>
+            
         </header>
 
     )

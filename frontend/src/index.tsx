@@ -10,6 +10,7 @@ import Container from './template/container';
 import {  notification } from 'antd';
 import toast, { Toaster } from 'react-hot-toast';
 import Cookies from 'universal-cookie';
+import Profile from './pages/profile/profile';
 
 
 const root = ReactDOM.createRoot(
@@ -57,6 +58,9 @@ const App = () => {
 					<Route path="/login" element={<Login />} />
 					<Route path="/" element={<Index />} />
 					<Route path="/migrations" element={<Migrations />} />
+					<Route path="/profile" element={<Profile />} >
+						<Route path="*" element={<Profile />} />
+					</Route>
 
 					{/* 404 */}
 					<Route path="*" element={<h1>404</h1>} />

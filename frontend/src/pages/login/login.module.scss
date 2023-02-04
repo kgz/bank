@@ -9,12 +9,12 @@
     flex-direction:column;
     justify-content:center;
     align-items:center;
-
+    margin-top: 50px;
 
     .login_card{
         width: clamp(300px, 50%, 500px);
         height: 400px;
-
+        text-align: center;
         // frosted glass
         background: rgb(255, 255, 255);
     

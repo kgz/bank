@@ -6,6 +6,7 @@ import Google from './google';
 import Loader from '../../template/loading';
 import fetch_api from '../../fetch/fetch';
 import Cookies from 'universal-cookie';
+const logo = require('../../template/header/logo.png');
 
 const Login = () => {
     const cookies = new Cookies();
@@ -55,6 +56,13 @@ const Login = () => {
         (isLoggedin && <Navigate to="/" />) ||
         <div className={styles.login}>
             <div className={styles.login_card}>
+
+                <img src={logo} alt="logo" width="250" style={{
+                    marginLeft: '50%',
+                    transform: 'translateX(-50%)',
+                    
+                }}/>
+
                 <div className={styles.login_sign_switch}>
                     <div className={styles.login_sign_switch_signin + ' ' + (active_sign ? styles.active : '')} onClick={() => setActive_sign(true)}>SIGN IN</div>
                     <div className={styles.login_sign_switch_signup + ' ' + (!active_sign ? styles.active : '')} onClick={() => setActive_sign(false)}>SIGN UP</div>

@@ -43,6 +43,9 @@ async fn main() {
     let _db:DB = new().unwrap();
     run_migrations();
     routes::routes::gen_routes().await;
-
-
+    // let code = user::roles::roles::generate_code();
+    // println!("{}", code);
+    // // get roles
+    // let roles = user::roles::roles::get_roles_from_code(&code);
+    // println!("{:?}", roles);
 }

@@ -2,15 +2,15 @@ import random
 
 
 roles = {
-    "a" : 0, 
-    "b" : 1,
-    "c" : 1,
-    "d" : 1,
-    "e" : 0,
-    "f" : 1,
-    "g" : 0,
-    "h" : 1,
-    "i" : 1,
+    "create_users" : 0, 
+    "delete_users" : 1,
+    "run_migrations" : 1,
+    "see_migrations" : 1,
+    "delete_users" : 0,
+    "enable_users" : 1,
+    "view_user_settings" : 0,
+    "view_app_settings" : 1,
+    "change_permissions" : 1,
     "j" : 1,
     "k" : 0,
 }
@@ -34,7 +34,10 @@ def generate_code():
             last = x
     
     code = str(code)
-    code = str(code).zfill(7)
+    # getamount to add to round tonearest 8
+    add = 8 - (len(code) % 8)
+
+    code = str(code).zfill(len(code) + add - 1)
     code = "1" + code
     code = hex(int(code, 2))
     code = code[2:]
@@ -70,13 +73,13 @@ def get_roldes_from_code(code):
     for x, item in enumerate(roles):
         if(bools[x] == "1"):
             tre.append(item)
-    print(tre)
+    return tre
 
 
 
 
 code = generate_code()
 print(code)
-get_roldes_from_code(code)
-
+r = get_roldes_from_code(code)
+print(r)
 

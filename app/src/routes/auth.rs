@@ -3,7 +3,7 @@ use crate::{routes::error::Error, routes::routes::Result, routes::routes::WebRes
 use chrono::prelude::*;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use std::{fmt};
 use warp::{
     filters::header::headers_cloned,
     http::header::{HeaderMap, HeaderValue, AUTHORIZATION},
@@ -75,6 +75,8 @@ async fn authorize((role, headers): (Role, HeaderMap<HeaderValue>)) -> WebResult
                 &Validation::new(Algorithm::HS512),
             )
             .map_err(|_| reject::custom(Error::JWTTokenError))?;
+            
+            
 
             if role == Role::Admin && Role::from_str(&decoded.claims.role) != Role::Admin {
                 return Err(reject::custom(Error::NoPermissionError));
@@ -87,6 +89,7 @@ async fn authorize((role, headers): (Role, HeaderMap<HeaderValue>)) -> WebResult
 }
 
 fn jwt_from_header(headers: &HeaderMap<HeaderValue>) -> Result<String> {
+
     let header = match headers.get(AUTHORIZATION) {
         Some(v) => v,
         None => return Err(Error::NoAuthHeaderError),

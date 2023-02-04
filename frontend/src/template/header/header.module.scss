@@ -1,25 +1,32 @@
 @use '../../root';
 
 .header{
-    background:white;
+    background:root.color(c1);
+    border-bottom: solid 1px root.color(c4);
     // border-radius: 15px;
-    margin-right:20px;
-    width:clamp(300px, 15%, 500px);
+    // margin-right:20px;
+    // width:clamp(300px, 15%, 500px);
     // make sticky
     position: -webkit-sticky;
     position: sticky;
     top: 0;
+    left:0px;
+    z-index: 100;
+    width:100%;
+    height: root.height(header);
     // align-self: flex-start;
 
 
     .header__logo {
-        width: 80px;
-        aspect-ratio: 1/1;
-        margin:0 auto;
-        text-align: center;
+        width: 180px;
+        margin-left:15px;
+        // aspect-ratio: 1/1;
+        // margin:20px auto;
+        // text-align: center;
         display: flex;
-        justify-content: center;
+        // justify-content: center;
         align-items: center;
+        height: 100%;
         // background: root.color(primary-bg);
         // border-radius: 15px;
         // border-bottom: solid 1px root.color(primary-bg);

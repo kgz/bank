@@ -1,6 +1,6 @@
 pub mod roles {
 
-    fn get_roles() -> Vec<(&'static str, i32)> {
+    pub fn get_roles() -> Vec<(&'static str, i32)> {
         // let roles = [
         //     ("a", 0), 
         //     ("b", 1),
@@ -15,21 +15,22 @@ pub mod roles {
         //     ("k", 0),
         // ];
         let roles = vec![
-            ("a", 0), 
-            ("b", 1),
-            ("c", 1),
-            ("d", 1),
-            ("e", 0),
-            ("f", 1),
-            ("g", 0),
-            ("h", 1),
-            ("i", 1),
+            ("create_users", 0), 
+            ("delete_users", 1),
+            ("run_migrations", 1),
+            ("see_migrations", 1),
+            ("delete_users", 0),
+            ("enable_users", 1),
+            ("view_user_settings", 0),
+            ("view_app_settings", 1),
+            ("change_permissions", 1),
             ("j", 1),
             ("k", 0),
+            ("l", 0)
         ];
         roles
     }
-    fn generate_code() -> String {
+    pub fn _generate_code() -> String {
         let roles = get_roles();
 
         // let values: Vec<i32> = roles.iter().map(|(_, v)| v).collect();
@@ -59,7 +60,9 @@ pub mod roles {
         // code = code.pad_left(7, '0');
         // pad left
         let mut ncode = "".to_string();
-        for _ in 0..(7 - code.len()) {
+        // get length until next mulitple of 8
+        let toadd = 8 - (code.len() % 8);
+        for _ in 0..(toadd) {
             ncode.push('0');
         }
         code = "1".to_string() + &code;
@@ -69,7 +72,7 @@ pub mod roles {
     }
 
 
-    fn reverse_code(code: &str) -> Result<String, &'static str> {
+    pub fn reverse_code(code: &str) -> Result<String, &'static str> {
         // code is hex,convert to binary
         // check if code is valid
         // if startswith 0x, remove it
@@ -128,7 +131,6 @@ pub mod roles {
                 tre.push(item.0);
             }
         }
-        print!("{:?}", tre);
         Ok(tre)
     }
 }
