@@ -15,4 +15,10 @@ warp-sessions = "*"
 serde = "*"
 thiserror = "*"
 chrono = "*"
-jsonwebtoken = "=7.2"
+jsonwebtoken = "*"
+actix-web = { version = "*"}
+derive_builder = "*"
+jwt-compact = { version = "*"}
+actix-jwt-auth-middleware-derive = "*"
+actix-jwt-auth-middleware = "*"
+core-crypto = "0.1.1-alpha.2"
