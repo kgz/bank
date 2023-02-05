@@ -1,45 +1,37 @@
-// add mysql
-
 extern crate migrations;
-use std::path::PathBuf;
-use actix_cors::Cors;
-use actix_files as fs;
+extern crate argon2;
 
-
+use actix_files::{self as fs, NamedFile};
 use actix_jwt_auth_middleware::FromRequest;
-use actix_web::HttpServer;
-use actix_web::HttpRequest;
+use actix_web::{web, App, HttpRequest, HttpServer, Result};
+use migrations::database::database::{new, Database, Ret, DB, self as db};
+use routes::auth::one_way_encrypt;
+use routes::{auth::login, user::set_user_icon};
+use routes::user::user_icon;
+use serde::{Deserialize, Serialize};
+
+use crate::routes::auth::check_password;
+
+pub struct Env<'a> {
+    pub env: &'a str, // one of "dev", "test", "prod"
+    pub auto_login_id: &'a str,
+
+}
 
 
-use migrations::database::database::Database;
-use migrations::run_migrations;
-use migrations::database::database::DB;
-use migrations::database::database::Ret;
-use migrations::database::database::new;
-use jwt_compact::{prelude::*, alg::{Hs256, Hs256Key}};
-use actix_web::{Result};
-
-use actix_web::{guard, web, App, HttpResponse};
-use routes::auth::Role;
-use routes::auth::authorize;
-use routes::auth::create_jwt;
-use routes::user::UserIcon;
-use serde::Deserialize;
-use serde::Serialize;
-use actix_files::NamedFile;
-use serde_json::json;
-
-use crate::routes::auth::jwt_from_header;
+pub const APP_ENV: Env = Env {
+    env: "dev",
+    auto_login_id: "1",
+};
 
 
 mod database {}
 
 mod routes {
-    pub mod routes;
-    pub mod error;
     pub mod auth;
+    pub mod error;
+    pub mod routes;
     pub mod user;
-
 }
 mod api {
     pub mod admin;
@@ -51,115 +43,92 @@ mod user {
 }
 
 #[allow(dead_code)]
-fn create_hello()  {
+fn create_hello() {
     let db: DB = new().unwrap();
-    let q:&str = "INSERT INTO `test` (`name`) VALUES ('?')";
+    let q: &str = "INSERT INTO `test` (`name`) VALUES ('?')";
     let args: Vec<&str> = vec!["hello"];
-    let q:String = db.prepare(q, &args);
-    let r:Ret = db.query(&q);
+    let q: String = db.prepare(q, &args);
+    let r: Ret = db.query(&q);
     // print r
     // assert_eq r.last != 0
     println!("r: {:?}", r);
-
-
 }
 
-// #[tokio::main]
-// async fn main() {
-//     let _db:DB = new().unwrap();
-//     run_migrations();
-//     routes::routes::gen_routes().await;
-//     // let code = user::roles::roles::generate_code();
-//     // println!("{}", code);
-//     // // get roles
-//     // let roles = user::roles::roles::get_roles_from_code(&code);
-//     // println!("{:?}", roles);
-// }
 #[derive(Serialize, Deserialize, Clone, Debug, FromRequest)]
 struct User {
     id: u32,
 }
 
-
-
-// async fn index(req: HttpRequest) -> HttpResponse {
-//     let headers = req.headers();
-//     let cookies  = req.cookie("token");
-//     println!("headers: {:?}", req);
-//     let res = authorize((Role::User, headers)).await;
-//     // if error 
-//     if let Err(e) = res {
-//         return HttpResponse::Unauthorized().body(e.to_string());
-//     }
-//     HttpResponse::Ok().body("Hello")
-// }
-
-#[derive(Serialize, Deserialize)]
-
-struct login_res {
-    token: String,
-}
-
-async fn login (req: HttpRequest) -> HttpResponse {
-    let headers = req.headers();
-    let jwt_token = create_jwt("1", &Role::User).await;
-    // new dicrt as token: res
-
-    // TODO on unwraop error
-
-    // as serde json
-    let res = login_res {
-        token: jwt_token.unwrap(),
-    };
-    
-    // HttpResponse::Ok().body("Hello")
-    HttpResponse::Ok().json(res)
-        
-}
-
-async fn index (req: HttpRequest) -> Result<fs::NamedFile>  {
-    let headers = req.headers();
-    let cookies  = headers.get("cookie");
-    println!("headers: {:?}", cookies);
-    let res = authorize((Role::User, headers)).await;
-    // // if error
-    // if let Err(e) = res {
-    //     return HttpResponse::Unauthorized().body(e.to_string());
-    // }
+async fn index(_: HttpRequest) -> Result<fs::NamedFile> {
     Ok(NamedFile::open("static/index.html")?)
 }
-    // render static/index.html
 
-// #[get("/me")]
-// async fn me(req: HttpRequest) -> Result<actix_files::NamedFile, Error> {
-//     let f = actix_files::NamedFile::open( "/static/usr/1.jpg").unwrap();
-//     // if not f 
-//     if  false {
-//         return Err(Error::NotFound);
-//     }
-//     Ok(f)
+async fn static_media(req: HttpRequest) -> Result<fs::NamedFile> {
+    let file = req.match_info().get("file").unwrap();
+    let path = format!("static/media/{}", file);
+    Ok(NamedFile::open(path)?)
+}
+
+
+pub struct ResUser {
+    id: u32,
+    name: String,
+    email: String,
+    password: String,
+}
+
+
+
+async fn test(_: HttpRequest) -> Result<String> {
+    let pass = "1234567";
+    let email = "sa@localhost";
+    let conn = db::new().unwrap();
+
+
+    // alter users  table add column level being int (100) not null default 0
+
     
-// }
+    let q:&str = "SELECT * FROM `users` WHERE `email` = '?'";
+    let args: Vec<&str> = vec![email];
+    let q:String = conn.prepare(q, &args);
+    let r = conn.query(&q);
+    // get first row
+    let row = r.result.first().unwrap();
+    println!("row: {:?}", row);
+    let res_pass: String = row.get("password").unwrap();
+    println!("res_pass: {}", res_pass);
+
+    let r = check_password(pass, &res_pass.to_owned());
 
 
+
+    // let hashed = one_way_encrypt(pass);
+    // println!("hashed: {}", hashed);
+    println!("match: {}", r);
+    Ok("test".to_string())
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    migrations::run_migrations();
     HttpServer::new(|| {
         App::new()
-        // .wrap(
-        //     Cors::permissive()
-        // )
-        // getcookies
-        
-            
             .route("/", web::get().to(index))
-            .route("/api/login", web::get().to(login))
-            .route("/me", web::get().to(UserIcon))
-            .route("/{_}", web::get().to(index))
-            .route("/{_}/{__}", web::get().to(index))
+            .route("/api/login", web::post().to(login))
+            .route("/test", web::get().to(test))
+            .service(
+                web::resource("/me")
+                .name("user_detail")
+                .route(web::get().to(user_icon))
+                .route(web::post().to(set_user_icon))
+            )
+            .route("/static/media/{file:.*}", web::get().to(static_media))
+            
+            
+            //fallback
+            .route("/{tail:.*}", web::get().to(index))
     })
     .bind(("127.0.0.1", 3030))?
     .run()
-    .await   
+    .await
 }

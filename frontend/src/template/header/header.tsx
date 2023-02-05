@@ -7,7 +7,7 @@ const Header = () => {
     return (
         <header className={styles.header}>
             <div className={styles.header__logo}>
-                <img src={logo} alt="logo" />
+                <img src="/static/media/logo.png" alt="logo" />
             </div>
             {/* <div className={styles.header__search}>
                 <input type="text" placeholder="Search" />

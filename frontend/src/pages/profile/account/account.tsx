@@ -3,47 +3,68 @@ import { useEffect, useState } from 'react';
 import styles from './account.module.scss';
 import Cookies from 'universal-cookie';
 import Imagea from '../../../fetch/image';
+import fetch_api from '../../../fetch/fetch';
+import Modal from 'antd/es/modal/Modal';
 
 const Account = () => {
     const [update, setUpdate] = useState(0);
-    const cookies = new Cookies();
-
-
-    useEffect(() => {
-        const controller = new AbortController();
-        const signal = controller.signal;
-        const token = cookies.get('token');
-
-        const headers = {
-            // 'Content-Type': 'image',
-            'Content-Type': 'image/png',
-            'Authorization': 'Bearer ' + token
-        }
-
-
-
-
-
-
-
-        return () => controller.abort();
-    }, [update]);
-
-
-
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [err, setErr] = useState('');
     const [dummyData, setDummyData] = useState({
         name: "John Doe",
         email: "t@t.com",
         img: "http://127.0.0.1:3030/me",
         path: '512/727/727399.png'
     });
+    const cookies = new Cookies();
 
     const handleFile = (e: any) => {
         const file = e.target.files[0];
         const reader = new FileReader();
+        const Controller = new AbortController();
+        const signal = Controller.signal;
+
+
         reader.onload = () => {
             if (reader.readyState === 2) {
                 console.log(reader.result);
+               
+                let headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + cookies.get('token')
+                }
+                if (file.size > 1000000) {
+                    setErr('File size is too big');
+                    setIsModalOpen(true);
+                    return;
+                }
+                fetch('/me', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        img: reader.result
+                    }),
+                    signal: signal
+                })
+                .then(res => {
+                    if (res.status === 200) {
+                        console.log('asdfasdfasdfasdf')
+                        return res.text();
+                    }
+                    throw new Error(res.statusText);
+
+                })
+                .then(data => {
+                    console.log(data);
+                    setUpdate(update+1);
+                })
+                .catch(err => {
+                    console.log(err);
+                    setErr(err.message);
+                    setIsModalOpen(true);
+                })
+               
+               
                 setDummyData({
                     ...dummyData,
                     img: reader.result as string,
@@ -53,7 +74,6 @@ const Account = () => {
         }
         reader.readAsDataURL(file);
     }
-
 
     return (
         <div className={styles.wrapper}>
@@ -65,7 +85,7 @@ const Account = () => {
                 <button onClick={()=>{setUpdate(update+1)}}>Update</button>
                 <div className={styles.account_logo__name}>
                     <span className={styles.desc}>
-                        Uplaod a photo that identifies you
+                        Upload a photo that identifies you
                     </span>
                     <br/> 
                     <p>{dummyData.path}</p>
@@ -102,10 +122,13 @@ const Account = () => {
                     <button>Save</button>
                 </Form.Item>
             </Form>
-            </div>
-
-        
         </div>
+        <Modal title="Basic Modal" open={isModalOpen} onOk={()=>setIsModalOpen(false)} cancelText={false}>
+            <p>{err}</p>
+        </Modal>
+    
+    </div>
+    
 
     );
 };

@@ -54,7 +54,10 @@ const Imagea = (props: ImageProps) => {
 
 
     if (loading) return <div>loading...</div>;
-    return <img src={url} alt={alt} {...rest} />;
+    return <img src={url} alt={alt} {...rest}
+        // set download link name
+        
+    />;
 };
 
 
