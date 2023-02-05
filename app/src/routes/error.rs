@@ -17,6 +17,8 @@ pub enum Error {
     InvalidAuthHeaderError,
     #[error("no permission")]
     NoPermissionError,
+    #[error("404")]
+    NotFound,
 }
 
 #[derive(Serialize, Debug)]

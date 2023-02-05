@@ -1,30 +1,33 @@
 // add mysql
 
 extern crate migrations;
-use actix_jwt_auth_middleware::AuthResult;
-use actix_jwt_auth_middleware::CookieSigner;
+use std::path::PathBuf;
+use actix_cors::Cors;
+use actix_files as fs;
+
+
 use actix_jwt_auth_middleware::FromRequest;
 use actix_web::HttpServer;
-use actix_web::Responder;
 use actix_web::HttpRequest;
-use actix_web::get;
-use actix_web::http::header::AUTHORIZATION;
-use actix_web::http::header::HeaderMap;
-use jwt_compact::alg::Ed25519;
+
+
 use migrations::database::database::Database;
 use migrations::run_migrations;
 use migrations::database::database::DB;
 use migrations::database::database::Ret;
 use migrations::database::database::new;
 use jwt_compact::{prelude::*, alg::{Hs256, Hs256Key}};
+use actix_web::{Result};
 
 use actix_web::{guard, web, App, HttpResponse};
 use routes::auth::Role;
 use routes::auth::authorize;
 use routes::auth::create_jwt;
-use routes::error::Error;
+use routes::user::UserIcon;
 use serde::Deserialize;
 use serde::Serialize;
+use actix_files::NamedFile;
+use serde_json::json;
 
 use crate::routes::auth::jwt_from_header;
 
@@ -35,6 +38,7 @@ mod routes {
     pub mod routes;
     pub mod error;
     pub mod auth;
+    pub mod user;
 
 }
 mod api {
@@ -78,32 +82,84 @@ struct User {
 
 
 
-async fn index(req: HttpRequest) -> HttpResponse {
-    let headers = req.headers();
-    let res = authorize((Role::User, headers)).await;
-    // if error 
-    if let Err(e) = res {
-        return HttpResponse::Unauthorized().body(e.to_string());
-    }
-    HttpResponse::Ok().body("Hello")
+// async fn index(req: HttpRequest) -> HttpResponse {
+//     let headers = req.headers();
+//     let cookies  = req.cookie("token");
+//     println!("headers: {:?}", req);
+//     let res = authorize((Role::User, headers)).await;
+//     // if error 
+//     if let Err(e) = res {
+//         return HttpResponse::Unauthorized().body(e.to_string());
+//     }
+//     HttpResponse::Ok().body("Hello")
+// }
+
+#[derive(Serialize, Deserialize)]
+
+struct login_res {
+    token: String,
 }
 
 async fn login (req: HttpRequest) -> HttpResponse {
     let headers = req.headers();
-    let res = create_jwt("1", &Role::User).await;
-    HttpResponse::Ok().body(format!("Bearer {:?}", res))
+    let jwt_token = create_jwt("1", &Role::User).await;
+    // new dicrt as token: res
+
+    // TODO on unwraop error
+
+    // as serde json
+    let res = login_res {
+        token: jwt_token.unwrap(),
+    };
+    
+    // HttpResponse::Ok().body("Hello")
+    HttpResponse::Ok().json(res)
+        
 }
+
+async fn index (req: HttpRequest) -> Result<fs::NamedFile>  {
+    let headers = req.headers();
+    let cookies  = headers.get("cookie");
+    println!("headers: {:?}", cookies);
+    let res = authorize((Role::User, headers)).await;
+    // // if error
+    // if let Err(e) = res {
+    //     return HttpResponse::Unauthorized().body(e.to_string());
+    // }
+    Ok(NamedFile::open("static/index.html")?)
+}
+    // render static/index.html
+
+// #[get("/me")]
+// async fn me(req: HttpRequest) -> Result<actix_files::NamedFile, Error> {
+//     let f = actix_files::NamedFile::open( "/static/usr/1.jpg").unwrap();
+//     // if not f 
+//     if  false {
+//         return Err(Error::NotFound);
+//     }
+//     Ok(f)
+    
+// }
+
 
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            // .service(testFactory)
+        // .wrap(
+        //     Cors::permissive()
+        // )
+        // getcookies
+        
+            
             .route("/", web::get().to(index))
-            .route("/login", web::get().to(login))
+            .route("/api/login", web::get().to(login))
+            .route("/me", web::get().to(UserIcon))
+            .route("/{_}", web::get().to(index))
+            .route("/{_}/{__}", web::get().to(index))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("127.0.0.1", 3030))?
     .run()
-    .await
+    .await   
 }

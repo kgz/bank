@@ -2,6 +2,7 @@ import { Form } from 'antd';
 import { useEffect, useState } from 'react';
 import styles from './account.module.scss';
 import Cookies from 'universal-cookie';
+import Imagea from '../../../fetch/image';
 
 const Account = () => {
     const [update, setUpdate] = useState(0);
@@ -20,17 +21,7 @@ const Account = () => {
         }
 
 
-        fetch('http://127.0.0.1:3030/static/user/2.jpg', { signal, headers })
-            // image
-            .then(res => res.blob())
-            .then(blob => {
-                const url = URL.createObjectURL(blob);
-                console.log(url)
-                setDummyData({
-                    ...dummyData,
-                    img: url
-                })
-            })
+
 
 
 
@@ -43,7 +34,7 @@ const Account = () => {
     const [dummyData, setDummyData] = useState({
         name: "John Doe",
         email: "t@t.com",
-        img: "https://cdn-icons-png.flaticon.com/512/727/727399.png",
+        img: "http://127.0.0.1:3030/me",
         path: '512/727/727399.png'
     });
 
@@ -68,7 +59,8 @@ const Account = () => {
         <div className={styles.wrapper}>
             <div className={styles.account_logo}>
                 <div className={styles.account_logo__img}>
-                    <img src ={dummyData.img} alt="profile" />
+                    {/* <img key={update} src = {"http://127.0.0.1:3030/me? " + new Date().getTime()} alt="profile" /> */}
+                    <Imagea key={update} src={"http://127.0.0.1:3030/me"} alt="profile" />
                 </div>
                 <button onClick={()=>{setUpdate(update+1)}}>Update</button>
                 <div className={styles.account_logo__name}>

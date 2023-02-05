@@ -22,3 +22,5 @@ jwt-compact = { version = "*"}
 actix-jwt-auth-middleware-derive = "*"
 actix-jwt-auth-middleware = "*"
 core-crypto = "0.1.1-alpha.2"
+actix-files = "*"
+actix-cors = "*"

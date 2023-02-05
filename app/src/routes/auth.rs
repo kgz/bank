@@ -35,20 +35,12 @@ impl fmt::Display for Role {
     }
 }
 
-
-
 #[derive(Debug, Deserialize, Serialize)]
 struct Claims {
     sub: String,
     role: String,
     exp: usize,
 }
-
-// pub fn with_auth(role: Role) -> impl Filter<Extract = (String,), Error = Rejection> + Clone {
-//     headers_cloned()
-//         .map(move |headers: HeaderMap<HeaderValue>| (role.clone(), headers))
-//         .and_then(authorize)
-// }
 
 pub async fn create_jwt(uid: &str, role: &Role) -> Result<String, Error> {
     let expiration = Utc::now()

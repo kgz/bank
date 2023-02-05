@@ -47,6 +47,11 @@ const Login = () => {
                         setIsLoggedin(true);
                     }
                 }, 1000);
+            },
+            (err: any) => {
+                console.log(err);
+                setError(err.message || 'An unknown error occured');
+                setLoading(false);
             }
         )
 
