@@ -13,9 +13,9 @@ pub fn run () {
     // alter users  table add column level being int (100) not null default 0
 
     
-    // let q:&str = "INSERT INTO `test` (`name`) VALUES ('?')";
-    // let args: Vec<&str> = vec!["hello"];
-    // let q:String = db.prepare(q, &args);
-    let r = db.query(&q);
+    let q:&str = "INSERT INTO `test` (`name`) VALUES ('?')";
+    let args: Vec<&str> = vec!["hello"];
+    let q:String = db.prepare(q, &args);
+    db.query(&q);
     
 }

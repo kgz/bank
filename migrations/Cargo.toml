@@ -11,3 +11,5 @@ mysql ='*'
 automod = "*"
 lazy_static = "*"
 serde = { version = "*", features = ["derive"] }
+argon2 = "*"
+rand = "*"

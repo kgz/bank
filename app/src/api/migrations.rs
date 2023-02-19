@@ -1,9 +1,8 @@
 use migrations::database::{
     database::Database,
-    database::DB,
     database::new,
 };
-use mysql::serde_json;
+
 
 
 #[allow(dead_code)]

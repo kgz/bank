@@ -17,19 +17,19 @@ pub fn run () {
         `username` varchar(255) NOT NULL,
         `email` varchar(255) NOT NULL,
         `password` varchar(255) NOT NULL,
-        `created_at` datetime NOT NULL,
-        `updated_at` datetime NOT NULL,
-        `locked_until` datetime NOT NULL,
-        `failed_login_attempts` int(11) NOT NULL,
-        `last_login_attempt` datetime NOT NULL,
-        `last_login_attempt_ip` varchar(255) NOT NULL,
-        `deleted_at` datetime NOT NULL,
+        `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        `locked_until` datetime,
+        `failed_login_attempts` int(11) NOT NULL DEFAULT 0,
+        `last_login_attempt` datetime,
+        `last_login_attempt_ip` varchar(255),
+        `deleted_at` datetime,
         PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
 
         // let q:&str = "INSERT INTO `test` (`name`) VALUES ('?')";
     // let args: Vec<&str> = vec!["hello"];
     // let q:String = db.prepare(q, &args);
-    let r = db.query(&q);
+    let _r = db.query(&q);
     
 }

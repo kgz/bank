@@ -6,6 +6,7 @@ import Google from './google';
 import Loader from '../../template/loading';
 import fetch_api from '../../fetch/fetch';
 import Cookies from 'universal-cookie';
+const logo = require('../../template/header/logo.png');
 
 const Login = () => {
     const cookies = new Cookies();
@@ -26,28 +27,63 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
         console.log(username)
-        fetch_api('login?'
-            + new URLSearchParams({
-                email: username,
-                pw: password,
-            }),
-            'GET'
-            , (data: any) => {
-                setTimeout(() => {
-                    if(!data.token) {
-                        setError(data.message || 'An unknown error occured');
-                        setLoading(false);
-                        return;
-                    }
+        // fetch_api('login',
+        //     'POST'
+        //     , (data: any) => {
+        //         setTimeout(() => {
+        //             if(!data.token) {
+        //                 setError(data.message || 'An unknown error occured');
+        //                 setLoading(false);
+        //                 return;
+        //             }
 
                 
-                    if(data.token) {
-                        cookies.set('token', data.token, { path: '/', maxAge: 3600 });
-                        setIsLoggedin(true);
-                    }
-                }, 1000);
+        //             if(data.token) {
+        //                 cookies.set('token', data.token, { path: '/', maxAge: 3600 });
+        //                 setIsLoggedin(true);
+        //             }
+        //         }, 1000);
+        //     },
+        //     (err: any) => {
+        //         console.log(err);
+        //         setError(err.message || 'An unknown error occured');
+        //         setLoading(false);
+        //     }
+        // )
+
+        fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: username,
+                password: password
+            })
+        })
+        .then(res => {
+            if (res.status === 200) {
+                return res.json();
             }
+            throw new Error(res.statusText);
+        }
         )
+        .then(data => {
+            console.log(data);
+            if(data.token) {
+                cookies.set('token', data.token, { path: '/', maxAge: 3600 });
+                setIsLoggedin(true);
+            }
+        }
+        )
+        .catch(err => {
+            console.log(err);
+            setError(err.message || 'An unknown error occured');
+            setLoading(false);
+        }
+        )
+
+
 
     }
 
@@ -55,6 +91,13 @@ const Login = () => {
         (isLoggedin && <Navigate to="/" />) ||
         <div className={styles.login}>
             <div className={styles.login_card}>
+
+                <img src={"/static/media/logo.png"} alt="logo" width="250" style={{
+                    marginLeft: '50%',
+                    transform: 'translateX(-50%)',
+                    
+                }}/>
+
                 <div className={styles.login_sign_switch}>
                     <div className={styles.login_sign_switch_signin + ' ' + (active_sign ? styles.active : '')} onClick={() => setActive_sign(true)}>SIGN IN</div>
                     <div className={styles.login_sign_switch_signup + ' ' + (!active_sign ? styles.active : '')} onClick={() => setActive_sign(false)}>SIGN UP</div>
@@ -80,7 +123,6 @@ const Login = () => {
 
                         </div>
                         <div className={styles.login_sign_signup}>
-                            <h1>Sign Up</h1>
                             <form>
                                 <div>
                                     <input type="text" />
