@@ -5,9 +5,8 @@ use actix_files::{self as fs, NamedFile};
 use actix_jwt_auth_middleware::FromRequest;
 use actix_web::{web, App, HttpRequest, HttpServer, Result};
 use migrations::database::database::{new, Database, Ret, DB, self as db};
-use routes::auth::one_way_encrypt;
 use routes::{auth::login, user::set_user_icon};
-use routes::user::user_icon;
+use routes::user::{user_icon, get_user_detail};
 use serde::{Deserialize, Serialize};
 
 use crate::routes::auth::check_password;
@@ -18,19 +17,16 @@ pub struct Env<'a> {
 
 }
 
-
 pub const APP_ENV: Env = Env {
-    env: "dev",
+    env: "deav",
     auto_login_id: "1",
 };
-
 
 mod database {}
 
 mod routes {
     pub mod auth;
     pub mod error;
-    pub mod routes;
     pub mod user;
 }
 mod api {
@@ -40,6 +36,10 @@ mod api {
 
 mod user {
     pub mod roles;
+}
+
+mod types {
+    pub mod user;
 }
 
 #[allow(dead_code)]
@@ -71,10 +71,10 @@ async fn static_media(req: HttpRequest) -> Result<fs::NamedFile> {
 
 
 pub struct ResUser {
-    id: u32,
-    name: String,
-    email: String,
-    password: String,
+    // id: u32,
+    // name: String,
+    // email: String,
+    // password: String,
 }
 
 
@@ -118,14 +118,17 @@ async fn main() -> std::io::Result<()> {
             .route("/test", web::get().to(test))
             .service(
                 web::resource("/me")
-                .name("user_detail")
+                .name("user_detail_img")
                 .route(web::get().to(user_icon))
                 .route(web::post().to(set_user_icon))
             )
+            .service(
+                web::resource("/api/me")
+                .name("user_detail")
+                .route(web::get().to(get_user_detail))
+            )
             .route("/static/media/{file:.*}", web::get().to(static_media))
-            
-            
-            //fallback
+            //fallback, react will handle the 404
             .route("/{tail:.*}", web::get().to(index))
     })
     .bind(("127.0.0.1", 3030))?

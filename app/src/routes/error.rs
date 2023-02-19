@@ -18,7 +18,7 @@ pub enum Error {
     // #[error("404")]
     // NotFound,
     #[error("internal server error")]
-    InternalServerError,
+    _InternalServerError,
 }
 
 #[derive(Serialize, Debug)]

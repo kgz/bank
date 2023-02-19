@@ -3,6 +3,10 @@ extern crate migrations;
 use actix_files as fs;
 use actix_web::HttpResponse;
 use actix_web::web;
+use base64::Engine;
+use base64::engine::general_purpose;
+use migrations::database::database;
+use migrations::database::database::Database;
 use serde::Deserialize;
 use serde::Serialize;
 use std::path::PathBuf;
@@ -10,6 +14,9 @@ use actix_web::HttpRequest;
 use regex::Regex;
 use actix_web::Result;
 use std::fs as file;
+
+use crate::types::user::User;
+
 use super::auth::authorize;
 
 use super::auth::Role;
@@ -18,7 +25,7 @@ use actix_files::NamedFile;
 pub async fn user_icon(req: HttpRequest) -> Result<fs::NamedFile> {
     let headers = req.headers();
     let res = authorize((Role::User, headers)).await;
-    let mut path1 = PathBuf::from("static/user/404.png");
+    let mut path1;// = PathBuf::from("static/user/404.png");
 
     if res.is_ok() {
         let user = res.unwrap();
@@ -49,7 +56,7 @@ pub async fn user_icon(req: HttpRequest) -> Result<fs::NamedFile> {
 }
 
 #[derive(Serialize, Deserialize)]
-struct res {
+struct Res {
     status: String,
     message: String,
 }
@@ -59,9 +66,21 @@ pub struct Info {
     img: String, //is base 64 string
 }
 
-pub async fn set_user_icon(info: web::Json<Info>) -> Result<HttpResponse> {
-    println!("req: {:?}", info);
+pub async fn set_user_icon(info: web::Json<Info>, req: HttpRequest) -> Result<HttpResponse> {
+    // println!("req: {:?}", info);
     // save to file
+
+    let headers = req.headers();
+    let res = authorize((Role::User, headers)).await;
+
+    if !res.is_ok() {
+       
+        println!("res: {:?}", res);
+        return Err(actix_web::error::ErrorNotFound("404"));
+    }
+    let user = res.unwrap();
+    println!("user: {:?}", user);
+    let user_id = user;
 
     let mut image_base64_data = info.img.to_owned();
 
@@ -75,7 +94,7 @@ pub async fn set_user_icon(info: web::Json<Info>) -> Result<HttpResponse> {
     let allowed = ["png", "jpg", "jpeg", "gif", "bmp"];
 
     if !allowed.contains(&image_type) {
-        let res = res {
+        let res = Res {
             status: "error".to_string(),
             message: "image type not allowed".to_string(),
         };
@@ -84,14 +103,54 @@ pub async fn set_user_icon(info: web::Json<Info>) -> Result<HttpResponse> {
 
     let re = Regex::new(r"^data:image/[a-z]+;base64,").unwrap();
     image_base64_data = re.replace_all(&image_base64_data, "").to_string();
-    let img_data = base64::decode(&image_base64_data);
+    // let img_data = Engine::decode(&image_base64_data, general_purpose::STANDARD);
+    let img_data = general_purpose::STANDARD.decode(&image_base64_data);
     let img_data = img_data.unwrap();
-    let path = format!("static/user/1");
+    let path = format!("static/user/{}", user_id);
     file::write(path, img_data).unwrap();
-    let res = res {
+    let res = Res {
         status: "ok".to_string(),
         message: "ok".to_string(),
     };
 
     Ok(HttpResponse::Ok().json(res))
+}
+
+pub async fn get_user_detail(req: HttpRequest) -> Result<HttpResponse> {
+    let headers = req.headers();
+    let user_id = authorize((Role::User, headers)).await;
+
+    if !user_id.is_ok() {
+        return Err(actix_web::error::ErrorNotFound("404"));
+    }
+
+    let user_id = user_id.unwrap();
+    
+    let db = database::new().unwrap();
+    let q:&str = "SELECT * FROM  `users` WHERE `id` = ?";
+    let args: Vec<&str> = vec![&user_id];
+    let q:String = db.prepare(q, &args);
+    let res = db.query(&q);
+
+    if res.result.len() < 1 {
+        let res = Res {
+            status: "error".to_string(),
+            message: "error".to_string(),
+        };
+        return Ok(HttpResponse::BadRequest().json(res));
+    }
+
+    let row = res.result.first().unwrap();
+    let user : User = User {
+        id: row.get("id").unwrap(),
+        username: row.get("username").unwrap(),
+        email: row.get("email").unwrap(),
+        created_at: row.get("created_at").unwrap(),
+        updated_at: row.get("updated_at").unwrap(),
+        last_login_attempt: row.get("last_login_attempt").unwrap(),
+
+       
+    };
+
+    Ok(HttpResponse::Ok().json(user))
 }

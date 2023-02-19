@@ -1,5 +1,5 @@
 use crate::{routes::error::Error, APP_ENV};
-use actix_web::{http::header::{HeaderMap, AUTHORIZATION}, HttpRequest, HttpResponse, web};
+use actix_web::{http::header::{HeaderMap, AUTHORIZATION}, HttpResponse, web};
 use chrono::prelude::*;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
@@ -129,7 +129,7 @@ pub async fn login(params: web::Json<LoginReqs>) -> HttpResponse {
 }
 
 
-pub fn one_way_encrypt(password: &str) -> String {
+pub fn _one_way_encrypt(password: &str) -> String {
     let password = password.as_bytes();
     let salt: String  = thread_rng()
     .sample_iter(&Alphanumeric)
@@ -161,18 +161,21 @@ pub async fn get_user_pass(email: String) -> String {
     let q:String = conn.prepare(q, &args);
     let r = conn.query(&q);
     // get first row
+    if r.result.len() == 0 {
+        return "".to_string();
+    }
+    // error on no row
     let row = r.result.first().unwrap();
     let res_pass: String = row.get("password").unwrap();
     res_pass
 }
 
-pub async fn get_user_id_from_email(email:String) -> String{
+pub async fn _get_user_id_from_email(email:String) -> String{
     let conn = db::new().unwrap();
     let q:&str = "SELECT id FROM `users` WHERE `email` = '?'";
     let args: Vec<&str> = vec![&email];
     let q:String = conn.prepare(q, &args);
     let r = conn.query(&q);
-    // get first row
     let row = r.result.first().unwrap();
     let id: String = row.get("id").unwrap();
     id
@@ -180,5 +183,8 @@ pub async fn get_user_id_from_email(email:String) -> String{
 
 pub async fn validate_password(email: String, password: String) -> bool {
     let res_pass = get_user_pass(email).await;
+    if res_pass.is_empty() {
+        return false;
+    }
     check_password(&password, &res_pass)
 }

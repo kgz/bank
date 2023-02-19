@@ -17,11 +17,20 @@ pub trait Database {
         query.to_string()
     }
 
+    /// Returns a prepared query string for mysql. 
+    /// Arguments replace ? in the query string in the order they are passed 
+    /// the ? character can be escaped with 2 backslashes 
+    /// 
+    /// ```
+    ///     $db = new DB();
+    ///     $query = "INSERT INTO `test` (`name`) VALUES ('?')";
+    ///     $args = ["hello"];
+    ///     $query = $db->prepare($query, $args);
+    ///     assert_eq($query, "INSERT INTO `test` (`name`) VALUES ('hello')");
+    /// ```
     fn prepare(&self, query: &str, params: &[&str]) -> String {
-        // format query
         let mut query = query.to_string();
         query = query.to_string();
-        // format params
         for param in params {
 
             let param = param.to_string();
@@ -39,44 +48,24 @@ pub trait Database {
             let param = param.replace("\x0c", "\\f");
             let param = param.replace("\x00", "\\0");
             let param = param.replace("\x1a", "\\Z");
-            let param = param.replace("\t", "\\t");
-            let param = param.replace("\x08", "\\b");
-            let param = param.replace("\x0c", "\\f");
-            let param = param.replace("\x00", "\\0");
-            let param = param.replace("\x1a", "\\Z");
-            let param = param.replace("\t", "\\t");
-            let param = param.replace("\x08", "\\b");
-            let param = param.replace("\x0c", "\\f");
-            let param = param.replace("\x00", "\\0");
-            let param = param.replace("\x1a", "\\Z");
-            let param = param.replace("\t", "\\t");
-            let param = param.replace("\x08", "\\b");
-            let param = param.replace("\x0c", "\\f");
-            let param = param.replace("\x00", "\\0");
-            let param = param.replace("\x1a", "\\Z");
-            let param = param.replace("\t", "\\t");
-            let param = param.replace("\x08", "\\b");
-            let param = param.replace("\x0c", "\\f");
-            let param = param.replace("\x00", "\\0");
-            let param = param.replace("\x1a", "\\Z");
-            let param = param.replace("\t", "\\t");
-            let param = param.replace("\x08", "\\b");
-            let param = param.replace("\x0c", "\\f");
-            let param = param.replace("\x00", "\\0");
-            let param = param.replace("\x1a", "\\Z");
-            let param = param.replace("\t", "\\t");
-            let param = param.replace("\x08", "\\b");
-            let param = param.replace("\x0c", "\\f");
-            let param = param.replace("\x00", "\\0");
-            let param = param.replace("\x1a", "\\Z");
-            let param = param.replace("\t", "\\t");
-            let param = param.replace("\x08", "\\b");
-            let param = param.replace("\x0c", "\\f");
-            query = query.replacen("?", &param, 1);
+            
+            let mut i = 0;
+            let mut escaped = false;
+            for c in query.chars() {
+                if c == '?' && !escaped {
+                    query.replace_range(i..i+1, &param);
+                    break;
+                }
+                if c == '\\' {
+                    escaped = !escaped;
+                } else {
+                    escaped = false;
+                }
+                i += 1;
+            }
 
-            // replace ? with index of i with param
-
-
+            // replace \\? with ? in query
+            query = query.replace("\\?", "?");
         }
         query.to_string()
     }
@@ -85,7 +74,7 @@ pub trait Database {
 pub struct DB {
     pub conn: mysql::PooledConn
 }
-#[derive(Debug)]
+#[derive(Debug) ]
 pub struct Ret {
     pub last: u64,
     pub affected: u64,
@@ -141,12 +130,6 @@ impl Database for DB {
             let name = format!("{}", name);
             headers.push(name);
         }
-
-      
-
-
-        println!("Last Insert ID: {}", last);
-        println!("Affected Rows: {}", affected);
         
         let out = Ret {
             last: last,
