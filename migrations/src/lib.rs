@@ -6,7 +6,7 @@ pub mod database {
 
 pub mod migrations{
     pub mod __all__;
-
+    
     pub mod files{
         automod::dir!(pub "src/migrations/files"); 
 

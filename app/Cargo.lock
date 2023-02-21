@@ -405,6 +405,7 @@ dependencies = [
  "actix-jwt-auth-middleware",
  "actix-jwt-auth-middleware-derive",
  "actix-web",
+ "automod",
  "base64 0.21.0",
  "chrono",
  "derive_builder",

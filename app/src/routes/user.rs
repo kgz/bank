@@ -3,6 +3,7 @@ extern crate migrations;
 use actix_files as fs;
 use actix_web::HttpResponse;
 use actix_web::web;
+use actix_web::web::Bytes;
 use base64::Engine;
 use base64::engine::general_purpose;
 use migrations::database::database;
@@ -15,12 +16,18 @@ use regex::Regex;
 use actix_web::Result;
 use std::fs as file;
 
+use crate::routes::error::Error;
 use crate::types::user::User;
+use crate::validators::Validators::Form;
+use crate::validators::forms::VBasicInfo::UserBasic;
+use crate::validators::forms::VBasicInfo::UserBasicForm;
+// use crate::validators::Validators::Validators;
 
 use super::auth::authorize;
 
 use super::auth::Role;
 use actix_files::NamedFile;
+
 
 pub async fn user_icon(req: HttpRequest) -> Result<fs::NamedFile> {
     let headers = req.headers();
@@ -153,4 +160,56 @@ pub async fn get_user_detail(req: HttpRequest) -> Result<HttpResponse> {
     };
 
     Ok(HttpResponse::Ok().json(user))
+}
+
+
+trait UserTrait {
+    
+}
+
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Vtype {
+    validation_type: String,
+    // email: String,
+}
+
+pub async fn update_me(bytes: Bytes, req: HttpRequest) -> Result<HttpResponse> {
+    // tostring
+    let orig_body = String::from_utf8(bytes.to_vec()).unwrap();
+    let body: Vtype = serde_json::from_str(&orig_body).unwrap();
+    let validate: Result<String, Error>;
+    println!("data: {:?}", body.validation_type.as_str());
+    match body.validation_type.as_str() {
+        "userBasic" => {
+            let data: UserBasicForm = serde_json::from_str(&orig_body).unwrap();
+            println!("data: {:?}", data);
+            validate = UserBasic::validate(&data);
+        },
+        // "userPassword" => {
+        //     let data: UserPasswordForm = serde_json::from_str(&orig_body).unwrap();
+        // },
+
+
+        _ => {
+            validate = Err(Error::InvalidData);
+        }
+
+    }
+
+    
+
+    println!("data: {:?}", validate);
+
+
+    // let headers = req.headers();
+    // let user_id = authorize((Role::User, headers)).await;
+
+    // if !user_id.is_ok() {
+    //     return Err(actix_web::error::ErrorUnauthorized("401"));
+    // }
+    // let user_id = user_id.unwrap();
+
+
+    Ok(HttpResponse::Ok().json("asdf"))
 }

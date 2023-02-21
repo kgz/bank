@@ -1,4 +1,4 @@
-import { Collapse, Descriptions, Form, Input } from 'antd';
+import { Button, Collapse, Descriptions, Form, Input } from 'antd';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import styles from './account.module.scss';
 import Cookies from 'universal-cookie';
@@ -6,6 +6,7 @@ import Image from '../../../fetch/image';
 import fetch_api from '../../../fetch/fetch';
 import Modal from 'antd/es/modal/Modal';
 import { userContext } from '../../..';
+import BasicInfo from './parts/basic_info';
 
 const Account = () => {
     const [update, setUpdate] = useState(0);
@@ -13,18 +14,6 @@ const Account = () => {
     const [err, setErr] = useState('');
     const { user, setUser } = useContext(userContext);
     const { Panel } = Collapse;
-
-    const [dummyData, setDummyData] = useState({
-        name: "John Doe",
-        email: "t@t.com",
-        img: "http://127.0.0.1:3030/me",
-        path: '512/727/727399.png'
-    });
-
-    const image_hash = useMemo(() => {
-    }, [dummyData.img]);
-
-
     const cookies = new Cookies();
 
     const handleFile = (e: any) => {
@@ -32,7 +21,6 @@ const Account = () => {
         const reader = new FileReader();
         const Controller = new AbortController();
         const signal = Controller.signal;
-
 
         reader.onload = () => {
             if (reader.readyState === 2) {
@@ -67,17 +55,18 @@ const Account = () => {
                         setErr(err.message);
                         setIsModalOpen(true);
                     })
-
-
-                setDummyData({
-                    ...dummyData,
-                    img: reader.result as string,
-                    path: file.name
-                })
             }
         }
         reader.readAsDataURL(file);
     }
+    const onFinish = (values: any) => {
+        console.log('Success:', values);
+      };
+      
+      const onFinishFailed = (errorInfo: any) => {
+        console.log('Failed:', errorInfo);
+      };
+
 
     return (
         <div className={styles.wrapper}>
@@ -90,7 +79,6 @@ const Account = () => {
                         Upload a photo that identifies you
                     </span>
                     <br />
-                    <p>{dummyData.path}</p>
                 </div>
                 {/* uplaod button */}
                 <div className={styles.account_logo__upload}>
@@ -106,30 +94,56 @@ const Account = () => {
 
             <div className={styles.account_form}>
 
-                <Collapse style={{background:'white'}}>
+                <Collapse style={{background:'white'}} activeKey={1}>
                     <Panel header="Basic Infomation" key="1" >
                 
-                        <Input addonBefore={"Display Name"} placeholder={dummyData.name}  />
+                        {/* <Input className={styles.input} addonBefore={"Display Name"} placeholder={user.data?.username}  />
+                        <Input type='email' addonBefore={"Contact"} placeholder={user.data?.email}  /> */}
 
 
-                        {/* <Form >
-                            <Form.Item label="Name" name="name">
-                                <input type="text" placeholder={dummyData.name} />
+                         {/* <Form
+                            name="basic"
+                            initialValues={{
+                                name: user.data?.username,
+                                email: user.data?.email
+                            }}
+                            onFinish={onFinish}
+                            onFinishFailed={onFinishFailed}
+                            autoComplete="off"
+                         >
+                            <Form.Item 
+                                label="Display Name" 
+                                name="name"
+                                rules={[{ required: true, message: 'Please input your username!' }]}
+                            > 
+                                <Input />
                             </Form.Item>
-                            <Form.Item label="Email" name="email">
-                                <input type="text" placeholder={dummyData.email} />
+
+                            <Form.Item 
+                                label="Email" 
+                                name="email"
+                                rules={[
+                                    {
+                                        type: 'email',
+                                        message: 'The input is not valid E-mail!',
+                                    },
+                                    {
+                                        required: true,
+                                        message: 'Please input your E-mail!',
+                                    },
+                                ]}
+                                initialValue={user.data?.email}
+                            > <Input type="email" />
                             </Form.Item>
-                            <Form.Item label="Password" name="password">
-                                <input type="password" placeholder="********" />
-                            </Form.Item>
-                            <Form.Item label="Confirm Password" name="confirm_password">
-                                <input type="password" placeholder="********" />
-                            </Form.Item>
+
+
                             <Form.Item>
-                                <button>Save</button>
+                                <Button type="primary" htmlType="submit">
+                                    Submit
+                                </Button>
                             </Form.Item>
                         </Form> */}
-
+                        <BasicInfo />
                     </Panel>
                     <Panel header="Security" key="2">
                         <p>Content of Panel 2</p>

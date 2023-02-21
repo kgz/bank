@@ -1,4 +1,4 @@
-use crate::{routes::error::Error, APP_ENV};
+use crate::{routes::error::Error, APP_ENV, Environments};
 use actix_web::{http::header::{HeaderMap, AUTHORIZATION}, HttpResponse, web};
 use chrono::prelude::*;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
@@ -61,7 +61,7 @@ pub async fn create_jwt(uid: &str, role: &Role) -> Result<String, Error> {
 }
 
 pub async fn authorize((role, headers): (Role, &HeaderMap)) -> Result<String, Error> {
-    if APP_ENV.env == "dev" {
+    if APP_ENV.env == Environments::DEV {
         return Ok(APP_ENV.auto_login_id.to_string());
     }
 

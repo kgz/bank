@@ -19,6 +19,8 @@ pub enum Error {
     // NotFound,
     #[error("internal server error")]
     _InternalServerError,
+    #[error("invalid data")]
+    InvalidData,
 }
 
 #[derive(Serialize, Debug)]

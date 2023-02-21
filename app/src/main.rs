@@ -6,19 +6,26 @@ use actix_jwt_auth_middleware::FromRequest;
 use actix_web::{web, App, HttpRequest, HttpServer, Result};
 use migrations::database::database::{new, Database, Ret, DB, self as db};
 use routes::{auth::login, user::set_user_icon};
-use routes::user::{user_icon, get_user_detail};
+use routes::user::{user_icon, get_user_detail, update_me};
 use serde::{Deserialize, Serialize};
 
 use crate::routes::auth::check_password;
 
+#[derive(PartialEq)]
+pub enum Environments {
+    DEV,
+    TEST,
+    PROD,
+}
+
 pub struct Env<'a> {
-    pub env: &'a str, // one of "dev", "test", "prod"
+    pub env: Environments,
     pub auto_login_id: &'a str,
 
 }
 
 pub const APP_ENV: Env = Env {
-    env: "deav",
+    env: Environments::DEV,
     auto_login_id: "1",
 };
 
@@ -40,6 +47,18 @@ mod user {
 
 mod types {
     pub mod user;
+}
+
+pub mod validators {
+    pub mod forms{
+        automod::dir!(pub "src/validators/forms");
+    }
+    pub mod inputs {
+        automod::dir!(pub "src/validators/inputs");
+    }
+    
+    pub mod Validators;
+    
 }
 
 #[allow(dead_code)]
@@ -69,25 +88,10 @@ async fn static_media(req: HttpRequest) -> Result<fs::NamedFile> {
     Ok(NamedFile::open(path)?)
 }
 
-
-pub struct ResUser {
-    // id: u32,
-    // name: String,
-    // email: String,
-    // password: String,
-}
-
-
-
 async fn test(_: HttpRequest) -> Result<String> {
     let pass = "1234567";
     let email = "sa@localhost";
     let conn = db::new().unwrap();
-
-
-    // alter users  table add column level being int (100) not null default 0
-
-    
     let q:&str = "SELECT * FROM `users` WHERE `email` = '?'";
     let args: Vec<&str> = vec![email];
     let q:String = conn.prepare(q, &args);
@@ -100,10 +104,6 @@ async fn test(_: HttpRequest) -> Result<String> {
 
     let r = check_password(pass, &res_pass.to_owned());
 
-
-
-    // let hashed = one_way_encrypt(pass);
-    // println!("hashed: {}", hashed);
     println!("match: {}", r);
     Ok("test".to_string())
 }
@@ -126,6 +126,11 @@ async fn main() -> std::io::Result<()> {
                 web::resource("/api/me")
                 .name("user_detail")
                 .route(web::get().to(get_user_detail))
+            )
+            .service(
+                web::resource("/api/me/update")
+                .name("update_me")
+                .route(web::post().to(update_me))
             )
             .route("/static/media/{file:.*}", web::get().to(static_media))
             //fallback, react will handle the 404

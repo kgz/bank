@@ -9,3 +9,4 @@ edition = "2021"
 mysql ='*'
 tokio = { version = "1", features = ["full"] }
 warp = "0.3"
+automod = "*"
