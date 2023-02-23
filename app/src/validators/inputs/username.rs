@@ -1,9 +1,9 @@
-use crate::{routes::error::Error, validators::Validators::Input};
+use crate::{routes::error::Error};
 
 
 pub struct Username {}
-impl<'a> Input <'a> for Username {
-    fn validate(data: &str) -> Result<String, Error> {
+impl Username {
+    pub fn validate(data: &str) -> Result<String, Error> {
         // validate that an email is valid
        
         

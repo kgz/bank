@@ -20,8 +20,8 @@ const testApi = () => {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
-            username: "test",
-            email: "sadfasdf",
+            // username: "asdfasdf",
+            email: "",
             validation_type: "userBasic"
         }),
         signal: signal

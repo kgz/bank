@@ -15,11 +15,12 @@ use actix_web::HttpRequest;
 use regex::Regex;
 use actix_web::Result;
 use std::fs as file;
-
+use crate::routes;
 use crate::routes::error::Error;
 use crate::types::user::User;
-use crate::validators::Validators::Form;
+use crate::validators::forms::Base::BaseForm;
 use crate::validators::forms::VBasicInfo::UserBasic;
+// use crate::validators::forms::VSecurity::{SecurityForm, UserSecurityForm};
 use crate::validators::forms::VBasicInfo::UserBasicForm;
 // use crate::validators::Validators::Validators;
 
@@ -174,32 +175,64 @@ pub struct Vtype {
     // email: String,
 }
 
-pub async fn update_me(bytes: Bytes, req: HttpRequest) -> Result<HttpResponse> {
+
+
+pub async fn update_me<'b>(bytes: Bytes, req: HttpRequest) -> Result<HttpResponse> {
+
     // tostring
-    let orig_body = String::from_utf8(bytes.to_vec()).unwrap();
+    let orig_body: String = String::from_utf8(bytes.to_vec()).unwrap();
+    let orig_body_owner = orig_body.clone();
+    // add static lifetime to orig_body_owner
+    // as string
+
     let body: Vtype = serde_json::from_str(&orig_body).unwrap();
-    let validate: Result<String, Error>;
     println!("data: {:?}", body.validation_type.as_str());
+
+    // Result<*const (dyn Inputs<'_> + 'static), _>
     match body.validation_type.as_str() {
         "userBasic" => {
-            let data: UserBasicForm = serde_json::from_str(&orig_body).unwrap();
-            println!("data: {:?}", data);
-            validate = UserBasic::validate(&data);
+            let data = orig_body_owner.to_owned();
+            return Ok(UserBasic::handle(&data));
+
         },
-        // "userPassword" => {
-        //     let data: UserPasswordForm = serde_json::from_str(&orig_body).unwrap();
-        // },
+        "security" => {
+            // form = serde_json::from_str(&orig_body) as Result<UserSecurityForm, serde_json::Error>;
+            // validator = SecurityForm::validate;
+        },
+        
 
 
         _ => {
-            validate = Err(Error::InvalidData);
+            let res = Res {
+                status: "error".to_string(),
+                message: "error".to_string(),
+            };
+            return Ok(HttpResponse::BadRequest().json(res));
         }
 
     }
-
     
+    // create a borrowed safe orig_body
+    // let orig_body_owned = orig_body.to_owned();
+    // let data = data(&orig_body_owned);
+    // //why is orig_body not borrowed safe?
+    // //a: because it is a string and not a reference
+    
+    // if data.is_err() {
+    //     let res = Res {
+    //         status: "error".to_string(),
+    //         message: "error".to_string(),
+    //     };
+    //     return Ok(HttpResponse::BadRequest().json(res));
+    // }
 
-    println!("data: {:?}", validate);
+    //data = boxed result, so we need to unwrap it
+    // let data = data.unwrap();
+   
+
+    // let validate = validator(form);
+    // // println!("form: {:?}", form);
+    // println!("data: {:?}", validate);
 
 
     // let headers = req.headers();
@@ -210,6 +243,6 @@ pub async fn update_me(bytes: Bytes, req: HttpRequest) -> Result<HttpResponse> {
     // }
     // let user_id = user_id.unwrap();
 
-
-    Ok(HttpResponse::Ok().json("asdf"))
+    //err
+    Ok(HttpResponse::NotFound().body("404"))
 }

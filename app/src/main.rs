@@ -57,7 +57,6 @@ pub mod validators {
         automod::dir!(pub "src/validators/inputs");
     }
     
-    pub mod Validators;
     
 }
 
