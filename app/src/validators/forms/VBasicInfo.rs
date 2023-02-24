@@ -9,7 +9,7 @@ use super::Base::{BaseForm, Forms};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserBasicForm{
     email: Email, //TODO change later leaving for demo
-    username: String,
+    username: Username,
 } 
 
 pub struct UserBasic {}
@@ -33,13 +33,7 @@ impl BaseForm for UserBasic {
             return Err(HttpResponse::BadRequest().json("Invalid data: validation error"));
         }
 
-        //    check that email, username, remember_me are set
-
-        if let Forms::UserBasicForm(data) = data {
-            // if data.username.is_empty() {
-            //     return Err(HttpResponse::BadRequest().json("Invalid data: username is empty"));
-            // }
-        }
+        
 
         // make data not a reference
         let data = match data {

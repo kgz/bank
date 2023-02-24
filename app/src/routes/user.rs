@@ -15,13 +15,11 @@ use actix_web::HttpRequest;
 use regex::Regex;
 use actix_web::Result;
 use std::fs as file;
-use crate::routes;
-use crate::routes::error::Error;
 use crate::types::user::User;
 use crate::validators::forms::Base::BaseForm;
 use crate::validators::forms::VBasicInfo::UserBasic;
 // use crate::validators::forms::VSecurity::{SecurityForm, UserSecurityForm};
-use crate::validators::forms::VBasicInfo::UserBasicForm;
+
 // use crate::validators::Validators::Validators;
 
 use super::auth::authorize;
@@ -41,11 +39,11 @@ pub async fn user_icon(req: HttpRequest) -> Result<fs::NamedFile> {
         let user_id = user;
         path1 = PathBuf::from(format!("static/user/{}", user_id));
     } else {
-        println!("res: {:?}", res);
+        //if is guest then return 404
         return Err(actix_web::error::ErrorNotFound("404"));
     }
+    
     let path2 = PathBuf::from("static/user/404.png");
-
     if !path1.exists() && !path2.exists() {
         return Err(actix_web::error::ErrorNotFound("404"));
     }
@@ -53,8 +51,8 @@ pub async fn user_icon(req: HttpRequest) -> Result<fs::NamedFile> {
     if !path1.is_file() && !path2.is_file() {
         return Err(actix_web::error::ErrorNotFound("404"));
     }
-    println!("path1: {:?}", path1.exists());
-    println!("path2: {:?}", path2.exists());
+    
+    //path1 = user, if not exist then path2 = default image
     if !path1.exists() && path2.exists() {
         path1 = path2;
     }
@@ -93,10 +91,10 @@ pub async fn set_user_icon(info: web::Json<Info>, req: HttpRequest) -> Result<Ht
     let mut image_base64_data = info.img.to_owned();
 
     // get image type
-    let image_type = image_base64_data.split(",").next().unwrap();
-    let image_type = image_type.split(";").next().unwrap();
-    let image_type = image_type.split(":").last().unwrap();
-    let image_type = image_type.split("/").last().unwrap();
+    let mut image_type = image_base64_data.split(",").next().unwrap();
+    image_type = image_type.split(";").next().unwrap();
+    image_type = image_type.split(":").last().unwrap();
+    image_type = image_type.split("/").last().unwrap();
     println!("image_type: {:?}", image_type);
 
     let allowed = ["png", "jpg", "jpeg", "gif", "bmp"];
@@ -156,18 +154,13 @@ pub async fn get_user_detail(req: HttpRequest) -> Result<HttpResponse> {
         created_at: row.get("created_at").unwrap(),
         updated_at: row.get("updated_at").unwrap(),
         last_login_attempt: row.get("last_login_attempt").unwrap(),
-
-       
     };
 
     Ok(HttpResponse::Ok().json(user))
 }
 
 
-trait UserTrait {
-    
-}
-
+trait UserTrait{}
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Vtype {
@@ -175,9 +168,7 @@ pub struct Vtype {
     // email: String,
 }
 
-
-
-pub async fn update_me<'b>(bytes: Bytes, req: HttpRequest) -> Result<HttpResponse> {
+pub async fn update_me<'b>(bytes: Bytes, _req: HttpRequest) -> Result<HttpResponse> {
 
     // tostring
     let orig_body: String = String::from_utf8(bytes.to_vec()).unwrap();
@@ -200,8 +191,6 @@ pub async fn update_me<'b>(bytes: Bytes, req: HttpRequest) -> Result<HttpRespons
             // validator = SecurityForm::validate;
         },
         
-
-
         _ => {
             let res = Res {
                 status: "error".to_string(),

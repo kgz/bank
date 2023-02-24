@@ -24,6 +24,8 @@ pub enum Error {
     InvalidData,
     #[error("Form Validation Error: {0}")]
     FormValidationError(String),
+    #[error("{0}")]
+    Custom(String),
 }
 
 #[derive(Serialize, Debug)]

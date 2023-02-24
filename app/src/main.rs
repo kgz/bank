@@ -56,8 +56,6 @@ pub mod validators {
     pub mod inputs {
         automod::dir!(pub "src/validators/inputs");
     }
-    
-    
 }
 
 #[allow(dead_code)]

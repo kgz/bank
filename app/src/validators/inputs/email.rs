@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 use std::error::Error as StdError;
 use serde::{Serialize, Deserialize};
 use warp::hyper::body::HttpBody;
-use std::error;
+
 
 use crate::routes::error::Error;
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -10,10 +10,23 @@ pub struct Email(String);
 
 impl Email {
     pub fn validate(data: &str) -> Result<Email, Error> {
-        // validate that an email is valid
-        // let e = MyError::YouAreNotBob("Invalid email".to_string());
-        // println!("error: {:?}", e.to_string());
-        // Err(Error::FormValidationError("Invalid email".to_owned()))
+        let regex = regex::Regex::new(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$").unwrap();
+        if !regex.is_match(data) 
+        || data.len() > 254
+        || data.len() < 5
+        || data.contains("..")
+        || data.contains("._")
+        || data.contains("_.")
+        || data.contains("__")
+        || data.contains("._.")
+        || data.contains("._-")
+        || data.contains("-._")
+        || data.contains("-.-")
+        || data.contains("-_-")
+        || data.is_empty()
+        {
+            return Err(Error::Custom("Invalid email".to_string()));
+        }
         Ok(Email(data.to_string()))
     }
 }
