@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 // use std::result::Result;
-use crate::{routes::{error::Error, self}};
+use crate::{routes::{error::Error}};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserSecurityForm {

@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
 use actix_web::HttpResponse;
-use serde::{Deserialize, Serialize, de::Error};
+use serde::{Deserialize, Serialize};
 use crate::{validators::{inputs::{username::Username, email::{Email}}, self}, routes::error::format_serd_error};
-use itertools::Itertools;
+
 use super::Base::{BaseForm, Forms}; 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
