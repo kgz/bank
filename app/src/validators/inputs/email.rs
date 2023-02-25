@@ -23,6 +23,10 @@ impl Email {
         {
             return Err(Error::Custom("Invalid email".to_string()));
         }
+
+        
+
+
         Ok(Email(data.to_string()))
     }
 }

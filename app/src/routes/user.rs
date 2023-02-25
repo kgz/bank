@@ -176,7 +176,15 @@ pub async fn update_me<'b>(bytes: Bytes, _req: HttpRequest) -> Result<HttpRespon
     // add static lifetime to orig_body_owner
     // as string
 
-    let body: Vtype = serde_json::from_str(&orig_body).unwrap();
+    let body: Result<Vtype, serde_json::Error> = serde_json::from_str(&orig_body);
+    if body.is_err() {
+        let res = Res {
+            status: "400".to_string(),
+            message: "Invalid Request".to_string(),
+        };
+        return Ok(HttpResponse::BadRequest().json(res));
+    }
+    let body = body.unwrap();
     println!("data: {:?}", body.validation_type.as_str());
 
     // Result<*const (dyn Inputs<'_> + 'static), _>

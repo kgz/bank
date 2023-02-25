@@ -16,7 +16,7 @@ serde = "*"
 thiserror = "*"
 chrono = "*"
 jsonwebtoken = "*"
-actix-web = { version = "*"}
+actix-web = { version = "4", features = ["openssl"] }
 derive_builder = "*"
 jwt-compact = { version = "*"}
 actix-jwt-auth-middleware-derive = "*"
@@ -29,3 +29,7 @@ rust-argon2 = "*"
 rand = "*"
 automod = "*"
 itertools = "*"
+openssl = { version = "0.10", features = ["v110"] }
+
+
+

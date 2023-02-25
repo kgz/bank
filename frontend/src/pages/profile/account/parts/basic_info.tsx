@@ -2,28 +2,22 @@ import React, { useContext } from 'react';
 import { Button, Checkbox, Form, Input } from 'antd';
 import { userContext } from '../../../..';
 
-const onFinish = (values: any) => {
-    console.log('Success:', values);
-};
 
 const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
 };
 
-const testApi = () => {
+const onFinish = (values: any) => {
     const controller = new AbortController();
     const signal = controller.signal;
     const headers = {
         'Content-Type': 'application/json',
     }
+
     fetch('/api/me/update', {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify({
-            // username: "asdfasdf",
-            email: "",
-            validation_type: "userBasic"
-        }),
+        body: JSON.stringify(values),
         signal: signal
     })
         .then(res => {
@@ -50,6 +44,7 @@ const BasicInfo = () => {
             size="large"
             labelCol={{ span: 8 }}
             wrapperCol={{ span: 16 }}
+
             fields={
                 [
                     {
@@ -59,20 +54,24 @@ const BasicInfo = () => {
                     {
                         name: ['email'],
                         value: "test@test.com"
+                    },
+                    {
+                        name: ['validation_type'],
+                        value: "userBasic"
                     }
                 ]
             }
-            onFinish={onFinish}
+            onFinish={onFinish} 
             autoComplete="off"
+            layout='vertical'
         >
 
-            <Button onClick={testApi}>Test</Button>
             <Form.Item
-                name="name"
+                name="username"
                 rules={[{ required: true, message: 'Please input your username!' }]}
             >
                 <Input addonBefore = "Display Name"/>
-            </Form.Item>
+            </Form.Item> 
 
             <Form.Item
                 name="email"
@@ -90,14 +89,13 @@ const BasicInfo = () => {
                 <Input addonBefore="Email"/>
             </Form.Item>
 
-            <Form.Item name="remember" valuePropName="checked" wrapperCol={{ offset: 8, span: 16 }}>
-                <Checkbox>Remember me</Checkbox>
-            </Form.Item>
-
             <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
                 <Button type="primary" htmlType="submit">
                     Submit
                 </Button>
+            </Form.Item>
+            <Form.Item name='validation_type'  style={{ display: 'none' }}>
+                <Input type='hidden' />
             </Form.Item>
         </Form>
     )
