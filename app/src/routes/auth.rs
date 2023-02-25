@@ -1,4 +1,4 @@
-use crate::{routes::error::Error, APP_ENV};
+use crate::{routes::error::Error, APP_ENV, Environments};
 use actix_web::{http::header::{HeaderMap, AUTHORIZATION}, HttpResponse, web};
 use chrono::prelude::*;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
@@ -61,7 +61,7 @@ pub async fn create_jwt(uid: &str, role: &Role) -> Result<String, Error> {
 }
 
 pub async fn authorize((role, headers): (Role, &HeaderMap)) -> Result<String, Error> {
-    if APP_ENV.env == "dev" {
+    if APP_ENV.env == Environments::DEV {
         return Ok(APP_ENV.auto_login_id.to_string());
     }
 
@@ -117,9 +117,12 @@ pub async fn login(params: web::Json<LoginReqs>) -> HttpResponse {
     let password = params.password.to_string();
 
     let validated: bool = validate_password(email, password).await;
+    println!("{:?}", validated);
     if validated == false {
         return HttpResponse::Unauthorized().finish();
     }
+
+    //TODO get user id and store here
     let jwt_token = create_jwt("1", &Role::User).await;
     let res = LoginRes {
         token: jwt_token.unwrap(),
@@ -148,8 +151,14 @@ pub fn _one_way_encrypt(password: &str) -> String {
 
 
 pub fn check_password( password: &str, hash: &str) -> bool {
-    let password = password.as_bytes();
     // has as u8
+    
+    let argon2_pass = _one_way_encrypt(&password);
+    println!("{:?}", argon2_pass);
+    println!("{:?}", hash);
+    
+    let password = password.as_bytes();
+
     argon2::verify_encoded(hash, password).unwrap()
 
 }
@@ -183,6 +192,7 @@ pub async fn _get_user_id_from_email(email:String) -> String{
 
 pub async fn validate_password(email: String, password: String) -> bool {
     let res_pass = get_user_pass(email).await;
+  
     if res_pass.is_empty() {
         return false;
     }

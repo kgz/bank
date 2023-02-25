@@ -1,4 +1,3 @@
-
 /**
  * Database module
  * @module database
@@ -6,7 +5,7 @@
  * @description Database module
  * @author Mat Frayne
  */
-use mysql::{prelude::Queryable};
+use mysql::prelude::Queryable;
 
 pub trait Database {
     fn query(&self, query: &str) -> Ret;
@@ -17,10 +16,18 @@ pub trait Database {
         query.to_string()
     }
 
-    /// Returns a prepared query string for mysql. 
-    /// Arguments replace ? in the query string in the order they are passed 
-    /// the ? character can be escaped with 2 backslashes 
-    /// 
+    fn fetch(query: &str, args: Vec<&str>) -> Result<Ret, mysql::Error> {
+        let db = self::new()?;
+        let q: &str = query;
+        let q: String = db.prepare(q, &args);
+        let result = db.query(&q);
+        Ok(result)
+    }
+
+    /// Returns a prepared query string for mysql.
+    /// Arguments replace ? in the query string in the order they are passed
+    /// the ? character can be escaped with 2 backslashes
+    ///
     /// ```
     ///     $db = new DB();
     ///     $query = "INSERT INTO `test` (`name`) VALUES ('?')";
@@ -32,7 +39,6 @@ pub trait Database {
         let mut query = query.to_string();
         query = query.to_string();
         for param in params {
-
             let param = param.to_string();
             let param = param.replace("'", "\\'");
             let param = param.replace("\"", "\\\"");
@@ -48,12 +54,12 @@ pub trait Database {
             let param = param.replace("\x0c", "\\f");
             let param = param.replace("\x00", "\\0");
             let param = param.replace("\x1a", "\\Z");
-            
+
             let mut i = 0;
             let mut escaped = false;
             for c in query.chars() {
                 if c == '?' && !escaped {
-                    query.replace_range(i..i+1, &param);
+                    query.replace_range(i..i + 1, &param);
                     break;
                 }
                 if c == '\\' {
@@ -72,23 +78,21 @@ pub trait Database {
 }
 
 pub struct DB {
-    pub conn: mysql::PooledConn
+    pub conn: mysql::PooledConn,
 }
-#[derive(Debug) ]
+#[derive(Debug)]
 pub struct Ret {
     pub last: u64,
     pub affected: u64,
     pub result: Vec<mysql::Row>,
-    pub headers: Vec<std::string::String>
-    // impliment to json string
+    pub headers: Vec<std::string::String>, // impliment to json string
 }
 
 impl Database for DB {
     fn query(&self, query: &str) -> Ret {
-        
         let url = "mysql://root@localhost:3306/bank";
-        let conn:  Result<mysql::Pool, mysql::Error> = mysql::Pool::new(url);
-    
+        let conn: Result<mysql::Pool, mysql::Error> = mysql::Pool::new(url);
+
         if let Err(_err) = conn {
             // print query
             println!("Query: {}", query);
@@ -97,7 +101,7 @@ impl Database for DB {
         }
         // assert type of conn
         let conn: mysql::Pool = conn.unwrap();
-        let pool = conn.get_conn(); 
+        let pool = conn.get_conn();
         if let Err(_err) = pool {
             // print query
             println!("Query: {}", query);
@@ -115,40 +119,36 @@ impl Database for DB {
             let out = Ret {
                 last: last,
                 affected: affected,
-                result, 
-                headers
+                result,
+                headers,
             };
             return out;
         }
 
         let col_length = result[0].columns().len();
         for i in 0..col_length {
-            
             let col = result[0].to_owned();
             let col = col.columns();
             let name = col[i].name_str();
             let name = format!("{}", name);
             headers.push(name);
         }
-        
+
         let out = Ret {
             last: last,
             affected: affected,
-            result, 
-            headers
-
+            result,
+            headers,
         };
 
-        
         return out;
     }
 
-    fn jsonify(&self, ret:Ret) -> String {
-
+    fn jsonify(&self, ret: Ret) -> String {
         let keys = ret.headers.clone();
 
         let r = ret.result;
-        let mut out = String::from("[");    
+        let mut out = String::from("[");
         for row in r {
             let keys = keys.clone();
             let mut row_out = String::from("{");
@@ -166,7 +166,7 @@ impl Database for DB {
                 let val = val.replace("\x00", "\\0");
                 let val = val.replace("\x1a", "\\Z");
                 row_out = row_out + &format!("\"{}\":\"{}\",", key, val);
-                i +=1;
+                i += 1;
             }
             row_out.pop();
             row_out = row_out + "}";
@@ -174,17 +174,16 @@ impl Database for DB {
         }
 
         out.pop();
-        out = out + "]"; 
+        out = out + "]";
 
         return out;
     }
 }
 
-
 #[allow(dead_code)]
-pub fn new() -> Result<DB, mysql::Error>{
+pub fn new() -> Result<DB, mysql::Error> {
     let url = "mysql://root@localhost:3306/bank";
-    let conn:  Result<mysql::Pool, mysql::Error> = mysql::Pool::new(url);
+    let conn: Result<mysql::Pool, mysql::Error> = mysql::Pool::new(url);
 
     if let Err(_err) = conn {
         println!("PANIC Error: {}", _err);
