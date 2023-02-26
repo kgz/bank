@@ -8,7 +8,7 @@ use crate::{routes::error::Error};
 pub struct Username(String);
 impl Username {
     pub fn validate(data: &str) -> Result<Username, Error> {
-        let regex = regex::Regex::new(r"[a-zA-Z0-9_-]").unwrap();
+        let regex = regex::Regex::new(r"^([a-zA-Z-_0-9]*)$").unwrap();
         if !regex.is_match(data) {
             return Err(Error::Custom("Username is invalid, must be a-z, A-Z, 0-9, _ and -".to_string()));
         }
