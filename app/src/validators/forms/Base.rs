@@ -12,15 +12,15 @@ pub enum Forms{
 
 pub trait BaseForm{
     fn parse(data: &str) -> Result<Forms, HttpResponse>;
-    fn validate(data: &Forms) -> Result<Forms, HttpResponse>;
+    fn validate(data: &Forms, id:&String) -> Result<Forms, HttpResponse>;
 
-    fn handle(data: &str) -> HttpResponse {
+    fn handle(data: &str, id:&String) -> HttpResponse {
         let data = Self::parse(data);
         if data.is_err() {
             return data.err().unwrap();
         }
         let data = data.unwrap();
-        let data = Self::validate(&data);
+        let data = Self::validate(&data, &id);
         if data.is_err() {
             return data.err().unwrap();
         }

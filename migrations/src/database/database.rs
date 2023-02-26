@@ -1,3 +1,4 @@
+use lazy_static::__Deref;
 /**
  * Database module
  * @module database
@@ -6,9 +7,10 @@
  * @author Mat Frayne
  */
 use mysql::prelude::Queryable;
+use regex::Regex;
 
 pub trait Database {
-    fn query(&self, query: &str) -> Ret;
+    fn query(&self, query: &str, params:Option<&[&str]>) -> Ret;
     fn jsonify(&self, ret: Ret) -> String;
     fn sanitize(&self, query: &str) -> String {
         //escape query
@@ -18,9 +20,12 @@ pub trait Database {
 
     fn fetch(query: &str, args: Vec<&str>) -> Result<Ret, mysql::Error> {
         let db = self::new()?;
-        let q: &str = query;
-        let q: String = db.prepare(q, &args);
-        let result = db.query(&q);
+        let result = db.query(query, Some(&args));
+
+        // let q: &str = query;
+        // let q: String = db.prepare(q, &args);
+        // println!("q: {}", q);
+        // let result = db.query(&q, None);
         Ok(result)
     }
 
@@ -38,28 +43,27 @@ pub trait Database {
     fn prepare(&self, query: &str, params: &[&str]) -> String {
         let mut query = query.to_string();
         query = query.to_string();
+        let search_regex_replacement = [
+            // search string     search regex        sql replacement regex
+            ["\u{0}",          "\\x00",            "\\\\0"],
+            ["'",               "'",               "\\\\'"],
+            ["\"",              "\"",              "\\\\\""],
+            ["\x08",            "\\x08",            "\\\\b"],
+            ["\n",              "\\n",              "\\\\n"],
+            ["\r",              "\\r",              "\\\\r"],
+            ["\t",              "\\t",              "\\\\t"],
+            ["\x1A",            "\\x1A",            "\\\\Z"],
+            ["\\",              "\\\\",             "\\\\\\\\"],
+        ];
         for param in params {
-            let param = param.to_string();
-            let param = param.replace("'", "\\'");
-            let param = param.replace("\"", "\\\"");
-            let param = param.replace("%", "\\%");
-            let param = param.replace("_", "\\_");
-            let param = param.replace("\\", "\\\\");
-            let param = param.replace("\0", "\\0");
-            let param = param.replace("\n", "\\n");
-            let param = param.replace("\r", "\\r");
-            let param = param.replace("\x1a", "\\Z");
-            let param = param.replace("\t", "\\t");
-            let param = param.replace("\x08", "\\b");
-            let param = param.replace("\x0c", "\\f");
-            let param = param.replace("\x00", "\\0");
-            let param = param.replace("\x1a", "\\Z");
+            let mut repr: String = param.to_string(); 
+           
 
             let mut i = 0;
             let mut escaped = false;
             for c in query.chars() {
                 if c == '?' && !escaped {
-                    query.replace_range(i..i + 1, &param);
+                    query.replace_range(i..i + 1, &repr.as_str());
                     break;
                 }
                 if c == '\\' {
@@ -84,14 +88,17 @@ pub struct DB {
 pub struct Ret {
     pub last: u64,
     pub affected: u64,
-    pub result: Vec<mysql::Row>,
+    pub results: Vec<mysql::Row>,
     pub headers: Vec<std::string::String>, // impliment to json string
 }
 
 impl Database for DB {
-    fn query(&self, query: &str) -> Ret {
+    fn query(&self, query: &str, params: Option<&[&str]>) -> Ret {
+        println!("query: {}", query);
         let url = "mysql://root@localhost:3306/bank";
         let conn: Result<mysql::Pool, mysql::Error> = mysql::Pool::new(url);
+        
+        
 
         if let Err(_err) = conn {
             // print query
@@ -101,6 +108,7 @@ impl Database for DB {
         }
         // assert type of conn
         let conn: mysql::Pool = conn.unwrap();
+
         let pool = conn.get_conn();
         if let Err(_err) = pool {
             // print query
@@ -110,24 +118,50 @@ impl Database for DB {
         }
         // check if error
         let mut pool: mysql::PooledConn = pool.unwrap();
-        let result: Vec<mysql::Row> = pool.query(query).unwrap();
+        // let result: Vec<mysql::Row> = pool.query(query).unwrap();
+        
+        let results: Result<Vec<mysql::Row>, mysql::Error>;
+        if params.is_some(){
+            println!("params: {:?}", params.unwrap().to_vec());
+            results = pool.exec(query, params.unwrap().to_vec());
+        }
+        else {
+            println!("params: None");
+            results = pool.query(query);
+        }
+        // let q = pool.prep(query).unwrap();
+        // println!("q: {:?}", q);
+        // lastr run query
+        if let Err(_err) = results {
+            // print query
+            println!("Query: {}", query);
+            println!("PANIC Error: {}", _err);
+            return Ret {
+                last: 0,
+                affected: 0,
+                results: Vec::new(),
+                headers: Vec::new(),
+            };
+        }
+
+        let results: Vec<mysql::Row> = results.unwrap();
         let last = pool.last_insert_id();
         let affected = pool.affected_rows();
         let mut headers = Vec::new();
 
-        if result.len() == 0 {
+        if results.len() == 0 {
             let out = Ret {
-                last: last,
-                affected: affected,
-                result,
+                last,
+                affected,
+                results,
                 headers,
             };
             return out;
         }
 
-        let col_length = result[0].columns().len();
+        let col_length = results[0].columns().len();
         for i in 0..col_length {
-            let col = result[0].to_owned();
+            let col = results[0].to_owned();
             let col = col.columns();
             let name = col[i].name_str();
             let name = format!("{}", name);
@@ -137,7 +171,7 @@ impl Database for DB {
         let out = Ret {
             last: last,
             affected: affected,
-            result,
+            results,
             headers,
         };
 
@@ -147,7 +181,7 @@ impl Database for DB {
     fn jsonify(&self, ret: Ret) -> String {
         let keys = ret.headers.clone();
 
-        let r = ret.result;
+        let r = ret.results;
         let mut out = String::from("[");
         for row in r {
             let keys = keys.clone();
@@ -196,3 +230,4 @@ pub fn new() -> Result<DB, mysql::Error> {
 
     return Ok(DB { conn: pool });
 }
+

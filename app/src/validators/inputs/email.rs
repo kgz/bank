@@ -23,13 +23,15 @@ impl Email {
         {
             return Err(Error::Custom("Invalid email".to_string()));
         }
-
-        
-
-
         Ok(Email(data.to_string()))
     }
+
+    pub fn to_str(&self) -> &str {
+        self.0.as_str()
+    }
 }
+
+
 
 impl<'de> Deserialize<'de> for Email {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

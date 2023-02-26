@@ -18,8 +18,8 @@ fn has_been_run(name: String) -> bool {
     let db = database::database::new().unwrap();
     let q = "SELECT * FROM `migrations` WHERE `name` = '?'";
     let q = db.prepare(q, &[&name]);
-    let res: database::database::Ret = db.query(&q);
-    if res.result.len() > 0 {
+    let res: database::database::Ret = db.query(&q, None);
+    if res.results.len() > 0 {
         return true;
     }
     return false;
@@ -63,7 +63,7 @@ pub fn run_migrations() {
             let db = database::database::new().unwrap();
             let q = "INSERT INTO `migrations` (`name`) VALUES ('?')";
             let q = db.prepare(q, &[&n]);
-            let res: database::database::Ret = db.query(&q);
+            let res: database::database::Ret = db.query(&q, None);
             println!("res: {:?}", res);
 
         }

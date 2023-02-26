@@ -1,8 +1,9 @@
 use std::fmt::Debug;
 
 use actix_web::HttpResponse;
+use migrations::database::database::{DB, Database, self};
 use serde::{Deserialize, Serialize};
-use crate::{validators::{inputs::{username::Username, email::{Email}}, self}, routes::error::format_serd_error};
+use crate::{validators::{inputs::{username::Username, email::{Email}}, self}, routes::error::{format_serd_error, Error}};
 
 use super::Base::{BaseForm, Forms}; 
 
@@ -28,20 +29,29 @@ impl BaseForm for UserBasic {
     }
 
 
-    fn validate(data: &Forms) -> Result<Forms, HttpResponse> {
+    fn validate(data: &Forms, id:&String) -> Result<Forms, HttpResponse> {
         if false {
             return Err(HttpResponse::BadRequest().json("Invalid data: validation error"));
         }
-
-        
-
-        // make data not a reference
-        let data = match data {
+          // make data not a reference
+          let data = match data {
             Forms::UserBasicForm(data) => data.clone(),
         };
 
-        
-
+        let q:&str = "SELECT * FROM users WHERE 
+            username = ? AND NOT `id` = 1 LIMIT 1";
+        let db = database::new().unwrap();
+            
+        let args: &[&str] = &[&data.username.to_str()];
+        let result = db.query(q, Some(args));
+        println!("result: {:?}", result);
+        if result.results.len() > 0 {
+            return Err(HttpResponse::BadRequest().json("Username already exists"));
+        }
+        //update username and email
+        let q:&str = "UPDATE users SET username = ?, email = ? WHERE id = ?";
+        let args: &[&str] = &[&data.username.to_str(), &data.email.to_str(), &id];
+        DB::fetch(q, args.to_vec()).map_err(|e| HttpResponse::InternalServerError().json(e.to_string()))?;
         Ok(validators::forms::Base::Forms::UserBasicForm(data))
     }
 

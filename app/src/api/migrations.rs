@@ -9,7 +9,7 @@ use migrations::database::{
 pub async fn get_migrations() -> Result<String, warp::Rejection> {
     let db = new().unwrap();
     let q:&str = "SELECT * FROM `migrations`";
-    let r = db.query(q);
+    let r = db.query(q, None);
 
     // get headers from db
     // print r

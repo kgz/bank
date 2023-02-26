@@ -136,9 +136,9 @@ pub async fn get_user_detail(req: HttpRequest) -> Result<HttpResponse> {
     let q:&str = "SELECT * FROM  `users` WHERE `id` = ?";
     let args: Vec<&str> = vec![&user_id];
     let q:String = db.prepare(q, &args);
-    let res = db.query(&q);
+    let res = db.query(&q, None);
 
-    if res.result.len() < 1 {
+    if res.results.len() < 1 {
         let res = Res {
             status: "error".to_string(),
             message: "error".to_string(),
@@ -146,7 +146,7 @@ pub async fn get_user_detail(req: HttpRequest) -> Result<HttpResponse> {
         return Ok(HttpResponse::BadRequest().json(res));
     }
 
-    let row = res.result.first().unwrap();
+    let row = res.results.first().unwrap();
     let user : User = User {
         id: row.get("id").unwrap(),
         username: row.get("username").unwrap(),
@@ -168,13 +168,21 @@ pub struct Vtype {
     // email: String,
 }
 
-pub async fn update_me<'b>(bytes: Bytes, _req: HttpRequest) -> Result<HttpResponse> {
+pub async fn update_me<'b>(bytes: Bytes, req: HttpRequest) -> Result<HttpResponse> {
 
     // tostring
     let orig_body: String = String::from_utf8(bytes.to_vec()).unwrap();
     let orig_body_owner = orig_body.clone();
     // add static lifetime to orig_body_owner
     // as string
+    let headers = req.headers();
+    let user_id = authorize((Role::User, headers)).await;
+
+    if !user_id.is_ok() {
+        return Err(actix_web::error::ErrorUnauthorized("401"));
+    }
+    let user_id = user_id.unwrap();
+
 
     let body: Result<Vtype, serde_json::Error> = serde_json::from_str(&orig_body);
     if body.is_err() {
@@ -191,7 +199,7 @@ pub async fn update_me<'b>(bytes: Bytes, _req: HttpRequest) -> Result<HttpRespon
     match body.validation_type.as_str() {
         "userBasic" => {
             let data = orig_body_owner.to_owned();
-            return Ok(UserBasic::handle(&data));
+            return Ok(UserBasic::handle(&data, &user_id));
 
         },
         "security" => {
@@ -232,14 +240,7 @@ pub async fn update_me<'b>(bytes: Bytes, _req: HttpRequest) -> Result<HttpRespon
     // println!("data: {:?}", validate);
 
 
-    // let headers = req.headers();
-    // let user_id = authorize((Role::User, headers)).await;
-
-    // if !user_id.is_ok() {
-    //     return Err(actix_web::error::ErrorUnauthorized("401"));
-    // }
-    // let user_id = user_id.unwrap();
-
+    
     //err
     Ok(HttpResponse::NotFound().body("404"))
 }

@@ -168,13 +168,13 @@ pub async fn get_user_pass(email: String) -> String {
     let q:&str = "SELECT password FROM `users` WHERE `email` = '?'";
     let args: Vec<&str> = vec![&email];
     let q:String = conn.prepare(q, &args);
-    let r = conn.query(&q);
+    let r = conn.query(&q, None);
     // get first row
-    if r.result.len() == 0 {
+    if r.results.len() == 0 {
         return "".to_string();
     }
     // error on no row
-    let row = r.result.first().unwrap();
+    let row = r.results.first().unwrap();
     let res_pass: String = row.get("password").unwrap();
     res_pass
 }
@@ -184,8 +184,8 @@ pub async fn _get_user_id_from_email(email:String) -> String{
     let q:&str = "SELECT id FROM `users` WHERE `email` = '?'";
     let args: Vec<&str> = vec![&email];
     let q:String = conn.prepare(q, &args);
-    let r = conn.query(&q);
-    let row = r.result.first().unwrap();
+    let r = conn.query(&q, None);
+    let row = r.results.first().unwrap();
     let id: String = row.get("id").unwrap();
     id
 }

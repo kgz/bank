@@ -66,7 +66,7 @@ fn create_hello() {
     let q: &str = "INSERT INTO `test` (`name`) VALUES ('?')";
     let args: Vec<&str> = vec!["hello"];
     let q: String = db.prepare(q, &args);
-    let r: Ret = db.query(&q);
+    let r: Ret = db.query(&q, None);
     // print r
     // assert_eq r.last != 0
     println!("r: {:?}", r);
@@ -94,9 +94,9 @@ async fn test(_: HttpRequest) -> Result<String> {
     let q:&str = "SELECT * FROM `users` WHERE `email` = '?'";
     let args: Vec<&str> = vec![email];
     let q:String = conn.prepare(q, &args);
-    let r = conn.query(&q);
+    let r = conn.query(&q, None);
     // get first row
-    let row = r.result.first().unwrap();
+    let row = r.results.first().unwrap();
     println!("row: {:?}", row);
     let res_pass: String = row.get("password").unwrap();
     println!("res_pass: {}", res_pass);

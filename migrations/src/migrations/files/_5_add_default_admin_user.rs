@@ -16,6 +16,6 @@ pub fn run () {
     let q:&str = "INSERT INTO `users` (`username`, `email`, `password`) VALUES ('?', '?', '?');";
     let args: Vec<&str> = vec!["SA", "sa@localhost", "password"];
     let q:String = db.prepare(q, &args);
-    let r = db.query(&q);
+    let r = db.query(&q, None);
     println!("result: {:?}", r);
 }

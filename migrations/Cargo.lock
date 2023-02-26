@@ -747,6 +747,7 @@ dependencies = [
  "lazy_static",
  "mysql",
  "rand",
+ "regex",
  "serde",
 ]
 

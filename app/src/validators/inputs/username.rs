@@ -8,19 +8,18 @@ use crate::{routes::error::Error};
 pub struct Username(String);
 impl Username {
     pub fn validate(data: &str) -> Result<Username, Error> {
-        // validate that an email is valid
-        // let db = database::new().unwrap();
-        let q:&str = "SELECT * FROM users WHERE username = '?' LIMIT 1";
-        let args: Vec<&str> = vec!["hello"];
-        // let q:String = db.prepare(q, &args);
-        // let result = db.query(&q);
-
-        let result = DB::fetch(q, args).map_err(|e| Error::Custom(e.to_string()))?;
-        if result.result.len() > 0 {
-            return Err(Error::Custom("Username already exists".to_string()));
+        let regex = regex::Regex::new(r"[a-zA-Z0-9_-]").unwrap();
+        if !regex.is_match(data) {
+            return Err(Error::Custom("Username is invalid, must be a-z, A-Z, 0-9, _ and -".to_string()));
         }
-        
+        if data.len() < 3 || data.len() > 16 {
+            return Err(Error::Custom("Username must be between 3 and 16 characters".to_string()));
+        }
         Ok(Username(data.to_string()))
+    }
+
+    pub fn to_str(&self) -> &str {
+        self.0.as_str()
     }
 }
 
