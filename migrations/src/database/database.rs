@@ -97,8 +97,6 @@ impl Database for DB {
         println!("query: {}", query);
         let url = "mysql://root@localhost:3306/bank";
         let conn: Result<mysql::Pool, mysql::Error> = mysql::Pool::new(url);
-        
-        
 
         if let Err(_err) = conn {
             // print query

@@ -10,7 +10,7 @@ impl Username {
     pub fn validate(data: &str) -> Result<Username, Error> {
         let regex = regex::Regex::new(r"^([a-zA-Z-_0-9]*)$").unwrap();
         if !regex.is_match(data) {
-            return Err(Error::Custom("Username is invalid, must be a-z, A-Z, 0-9, _ and -".to_string()));
+            return Err(Error::Custom("Username is invalid, username can only contain letters, numbers _, and -".to_string()));
         }
         if data.len() < 3 || data.len() > 16 {
             return Err(Error::Custom("Username must be between 3 and 16 characters".to_string()));

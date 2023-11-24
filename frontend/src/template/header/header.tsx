@@ -1,14 +1,13 @@
 import { NavLink } from 'react-router-dom';
 import styles from './header.module.scss';
 import Image from '../../fetch/image';
-import { userContext } from '../..';
-import { useContext } from 'react';
 
-const logo = require('./logo.png');
+import logo from './logo.png';
+import { useAppSelector } from '../../@store/store';
 
 const Header = () => {
 
-    const {user, setUser} = useContext(userContext);
+    const {user} = useAppSelector(state => state.UserSlice.data);
 
     return (
         <header className={styles.header}>

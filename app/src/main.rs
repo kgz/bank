@@ -1,16 +1,21 @@
-extern crate migrations;
 extern crate argon2;
+extern crate migrations;
+use std::thread;
+
 use actix_cors::Cors;
 
 use actix_files::{self as fs, NamedFile};
 use actix_jwt_auth_middleware::FromRequest;
-use actix_web::{web, App, HttpRequest, HttpServer, Result, http};
-use migrations::database::database::{new, Database, Ret, DB, self as db};
-use routes::{auth::login, user::set_user_icon};
-use routes::user::{user_icon, get_user_detail, update_me};
-use serde::{Deserialize, Serialize};
+use actix_web::{http, web, App, HttpRequest, HttpServer, Result};
+use chrono::Utc;
+use migrations::database::database::{self as db, new, Database, Ret, DB};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+use routes::user::{get_user_detail, update_me, user_icon};
+use routes::{auth::login, user::set_user_icon};
+use serde::{Deserialize, Serialize};
 
+use crate::cronjobs::api::{start_cron, stop_cron};
+use crate::cronjobs::CronManager;
 use crate::routes::auth::check_password;
 
 #[derive(PartialEq)]
@@ -23,7 +28,6 @@ pub enum Environments {
 pub struct Env<'a> {
     pub env: Environments,
     pub auto_login_id: &'a str,
-
 }
 
 pub const APP_ENV: Env = Env {
@@ -52,12 +56,22 @@ mod types {
 }
 
 pub mod validators {
-    pub mod forms{
+    pub mod forms {
         automod::dir!(pub "src/validators/forms");
     }
     pub mod inputs {
         automod::dir!(pub "src/validators/inputs");
     }
+}
+
+pub mod cronjobs {
+    pub mod CronManager;
+    pub mod cronInterface;
+    pub mod crons {
+        automod::dir!(pub "src/cronjobs/crons");
+    }
+
+    pub mod api;
 }
 
 #[allow(dead_code)]
@@ -91,9 +105,9 @@ async fn test(_: HttpRequest) -> Result<String> {
     let pass = "1234567";
     let email = "sa@localhost";
     let conn = db::new().unwrap();
-    let q:&str = "SELECT * FROM `users` WHERE `email` = '?'";
+    let q: &str = "SELECT * FROM `users` WHERE `email` = '?'";
     let args: Vec<&str> = vec![email];
-    let q:String = conn.prepare(q, &args);
+    let q: String = conn.prepare(q, &args);
     let r = conn.query(&q, None);
     // get first row
     let row = r.results.first().unwrap();
@@ -113,53 +127,61 @@ async fn main() -> std::io::Result<()> {
     // print cwd()
     println!("cwd: {:?}", std::env::current_dir().unwrap());
     let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
-    builder.set_private_key_file(".pem/key.pem", SslFiletype::PEM).unwrap();
+    builder
+        .set_private_key_file(".pem/key.pem", SslFiletype::PEM)
+        .unwrap();
     builder.set_certificate_chain_file(".pem/cert.pem").unwrap();
+
+    let manager = CronManager::CronManager::new();
+    thread::spawn(move || {
+        manager.run();
+    });
 
     let server = HttpServer::new(|| {
         let cors = Cors::default()
-              .allowed_origin("https://localhost")
-              .allowed_origin_fn(|origin, _req_head| {
-                  origin.as_bytes().ends_with(b".rust-lang.org")
-              })
-              .allowed_methods(vec!["GET", "POST"])
-              .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-              .allowed_header(http::header::CONTENT_TYPE)
-              .max_age(3600);
+            .allowed_origin("https://localhost")
+            .allowed_origin_fn(|origin, _req_head| origin.as_bytes().ends_with(b".rust-lang.org"))
+            .allowed_methods(vec!["GET", "POST"])
+            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+            .allowed_header(http::header::CONTENT_TYPE)
+            .max_age(3600);
 
-        // run on ssl
-
-            
         App::new()
             .wrap(cors)
-
             .route("/", web::get().to(index))
             .route("/api/login", web::post().to(login))
             .route("/test", web::get().to(test))
             .service(
                 web::resource("/me")
-                .name("user_detail_img")
-                .route(web::get().to(user_icon))
-                .route(web::post().to(set_user_icon))
+                    .name("user_detail_img")
+                    .route(web::get().to(user_icon))
+                    .route(web::post().to(set_user_icon)),
             )
             .service(
                 web::resource("/api/me")
-                .name("user_detail")
-                .route(web::get().to(get_user_detail))
+                    .name("user_detail")
+                    .route(web::get().to(get_user_detail)),
             )
             .service(
                 web::resource("/api/me/update")
-                .name("update_me")
-                .route(web::post().to(update_me))
+                    .name("update_me")
+                    .route(web::post().to(update_me)),
             )
+            // .service(
+            //     web::resource("/api/cron/start")
+            //     .name("cronstrat")
+            //     .app_data(cron)
+            //     .route(web::get().to(start_cron))
+            // )
+            // .route("/api/cron/start", web::get().to(|req: HttpRequest|start_cron(req, &manager)))
+            // .route("/api/cron/stop", web::get().to(|req: HttpRequest|stop_cron(req, &manager)))
             .route("/static/media/{file:.*}", web::get().to(static_media))
             //fallback, react will handle the 404
             .route("/{tail:.*}", web::get().to(index))
     })
     .bind_openssl("0.0.0.0:443", builder)?;
-    
+
     // print server url
     println!("Server running at https://localhost:443/");
-    server.run()
-    .await
+    server.run().await
 }

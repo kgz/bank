@@ -30,6 +30,9 @@ rand = "*"
 automod = "*"
 itertools = "*"
 openssl = { version = "0.10", features = ["v110"] }
+cron_tab = {version = "0.2", features = ["sync", "async"]}
+strum = "*"
+strum_macros = "*"
 
 
 

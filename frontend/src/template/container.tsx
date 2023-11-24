@@ -1,21 +1,21 @@
 import Header from "./header/header";
 import styles from "./container.module.scss";
-import { ctx } from "..";
 import { useContext } from "react";
 import Sidebar from "./header/sidebar";
+import { useAppSelector } from "../@store/store";
 const Container = (props: any) => {
-    const {isLoggedin, setIsLoggedin} = useContext(ctx);
 
+    const { loggedIn } = useAppSelector(state => state.UserSlice.data);
 
     const { children, ...rest } = props;
     return (
         <span className={styles.main}>
-            {isLoggedin &&  <>
+            {loggedIn &&  <>
                 <Header />
                 <Sidebar/>
             </>
              }
-            <div className={isLoggedin ? styles.main_content : ''}>
+            <div className={loggedIn ? styles.main_content : ''}>
                 {children}
             </div>
         </span>

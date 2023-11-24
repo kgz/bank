@@ -5,14 +5,16 @@ import Cookies from 'universal-cookie';
 import Image from '../../../fetch/image';
 import fetch_api from '../../../fetch/fetch';
 import Modal from 'antd/es/modal/Modal';
-import { userContext } from '../../..';
 import BasicInfo from './parts/basic_info';
+import { useAppSelector, useAppDispatch } from '../../../@store/store';
+import { setProfileCache, setProfileUrl, setUserData } from '../../../@store/user.slice';
 
 const Account = () => {
     const [update, setUpdate] = useState(0);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [err, setErr] = useState('');
-    const { user, setUser } = useContext(userContext);
+    const { loggedIn } = useAppSelector(state => state.UserSlice.data);
+    const dispatch = useAppDispatch();
     const { Panel } = Collapse;
     const cookies = new Cookies();
 
@@ -24,7 +26,7 @@ const Account = () => {
 
         reader.onload = () => {
             if (reader.readyState === 2) {
-                let headers = {
+                const headers = {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + cookies.get('token')
                 }
@@ -43,8 +45,10 @@ const Account = () => {
                 })
                     .then(res => {
                         if (res.status === 200) {
-                            setUser({ ...user, profileCache: new Date().getTime().toString() });
-                            // setUpdate(update+1);
+                            // throw new Error("not implemented");
+                            // setUser({ ...user, profileCache: new Date().getTime().toString() });
+                            void dispatch(setProfileCache(new Date().getTime().toString()));
+                            setUpdate(update+1);
                             return res.text();
                         }
                         throw new Error(res.statusText);
@@ -52,11 +56,13 @@ const Account = () => {
                     })
                     .catch(err => {
                         console.log(err);
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                         setErr(err.message);
                         setIsModalOpen(true);
                     })
             }
         }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         reader.readAsDataURL(file);
     }
     const onFinish = (values: any) => {

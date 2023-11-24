@@ -1,13 +1,15 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { ctx } from '../..';
 import Cookies from 'universal-cookie';
+import { useAppDispatch } from '../../@store/store';
+import { setLoggedIn } from '../../@store/user.slice';
 
 
 function Index() {
   const cookies = new Cookies();
 
-  const {isLoggedin, setIsLoggedin} = React.useContext(ctx);
+const dispatch = useAppDispatch();
+
   return (
     <div className="App">
       Home 
@@ -16,7 +18,9 @@ function Index() {
       <NavLink to="/login">Login</NavLink>
       <button onClick={() => {
         cookies.remove('token');
-        setIsLoggedin(false);
+        void dispatch(setLoggedIn(false));
+        (new Cookies()).set('token', '', { path: '/', maxAge: 0 });
+        console.log(cookies.get('token'));
       }}>Logout</button>
     </div>
   );

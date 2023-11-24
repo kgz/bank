@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import styles from './sidebar.module.scss';
 import { DashboardOutlined, DatabaseOutlined, UserOutlined } from '@ant-design/icons';
-const logo = require('./logo.png');
+import logo from './logo.png';
 
 const Sidebar = () => {
     return (

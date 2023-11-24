@@ -1,64 +1,40 @@
 import React, { useContext, useEffect } from 'react';
 import { Alert, Button, Checkbox, Form, Input } from 'antd';
-import { userContext } from '../../../..';
-import { User } from '../../../../types/User';
-
-
-const onFinishFailed = (errorInfo: any) => {
-    console.log('Failed:', errorInfo);
-};
-
-
-
+import type { TUser } from '../../../../@types/TUser';
+import { useAppDispatch, useAppSelector } from '../../../../@store/store';
+import { setUserData } from '../../../../@store/user.slice';
+import axios from 'axios';
 
 const BasicInfo = () => {
-    const {user, setUser} = useContext(userContext);
+
+    const {
+        user 
+    } = useAppSelector(state => state.UserSlice.data);
+
+    const dispatch = useAppDispatch();
+
     const [errors, setErrors] = React.useState({});
     const onFinish = (values: any) => {
-        const controller = new AbortController();
-        const signal = controller.signal;
         const headers = {
             'Content-Type': 'application/json',
         }
         setErrors({});
-        fetch('/api/me/update', {
-            method: 'POST',
+        axios.post<{UserBasicForm: TUser['data']}>('/api/me/update', JSON.stringify(values), {
             headers: headers,
-            body: JSON.stringify(values),
-            signal: signal
         })
-            .then(res => {
-                if (res.status === 200) {
-                    return res.json();
-                }
+        .then(response => {
+            console.log(response);
+            if (response.status === 200) {
+                void dispatch(setUserData(response.data.UserBasicForm));
+            } else {
+                setErrors(response.data);
+            }
+        }).catch(error => {
+            console.log(error.response.data);
+            // setErrors(error.response.data);
+        });
 
-                return res.json().then((err: any) => {
-                    setErrors(err);
-                    throw new Error(err);
-                });
-            })
-            .then(res => {
-                console.log(res);
-                //update user.data.username to res.UserBasicForm.username
-                setUser((prev: User) => {
-                    return {
-                        ...prev,
-                        data: {
-                            ...prev.data,
-                            username: res.UserBasicForm.username
-                        }
-                    }
-                })
-                
-            })
-            .catch(err => {
-                // console.log(err.response.data);
-                // // get etext
-                // setErrors(err.response.data);
-                
-            })
     }
-
 
     useEffect(() => {
         console.log(Object.values(errors));
@@ -67,19 +43,19 @@ const BasicInfo = () => {
     return (
         <Form
             name="basic"
-            size="large"
+            size="middle"
             labelCol={{ span: 8 }}
             wrapperCol={{ span: 16 }}
 
             fields={
                 [
                     {
-                        name: ['name'],
-                        value: Math.random().toString(36).substring(7)
+                        name: ['username'],
+                        value: user?.data?.username
                     },
                     {
                         name: ['email'],
-                        value: "test@test.com"
+                        value: user?.data?.email
                     },
                     {
                         name: ['validation_type'],
@@ -103,6 +79,7 @@ const BasicInfo = () => {
 
             <Form.Item
                 name="email"
+                
                 rules={[
                     {
                         type: 'email',

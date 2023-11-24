@@ -14,8 +14,8 @@
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
-    <link rel="manifest" href="https://localhost/manifest.json" />
-    <script defer="" src="https://localhost:3000/static/js/bundle.js"></script>
+    <!-- <link rel="manifest" href="https://localhost/manifest.json" /> -->
+    <!-- <script defer="" src="https://localhost:3000/static/js/bundle.js"></script> -->
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
@@ -40,5 +40,27 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-  </body>
+
+    <!-- echo sprintf('
+            <script type="module">
+                window.dev = true;
+                import RefreshRuntime from "https://%s:%s/@react-refresh"
+                RefreshRuntime.injectIntoGlobalHook(window)
+                window.$RefreshReg$ = () => {}
+                window.$RefreshSig$ = () => (type) => type
+                window.__vite_plugin_react_preamble_installed__ = true
+            </script>
+            ', $_SERVER['SERVER_NAME'], $port);
+            echo sprintf('<script defer type="module" src="https://%s:%s/src/index.tsx"></script>', $_SERVER['SERVER_NAME'], $port); -->
+
+            <script type="module">
+                window.dev = true;
+                import RefreshRuntime from "https://localhost:3000/@react-refresh"
+                RefreshRuntime.injectIntoGlobalHook(window)
+                window.$RefreshReg$ = () => {}
+                window.$RefreshSig$ = () => (type) => type
+                window.__vite_plugin_react_preamble_installed__ = true
+            </script>
+            <script defer type="module" src="https://localhost:3000/src/index.tsx"></script>
+        </body>
 </html>

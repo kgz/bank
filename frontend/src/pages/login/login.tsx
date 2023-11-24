@@ -1,55 +1,33 @@
 import { useContext, useState } from 'react';
 import styles from './login.module.scss'
-import { ctx } from "../..";
 import { Navigate } from 'react-router';
 import Google from './google';
 import Loader from '../../template/loading';
 import fetch_api from '../../fetch/fetch';
 import Cookies from 'universal-cookie';
-const logo = require('../../template/header/logo.png');
+import logo from '../../template/header/logo.png';
+import { useAppDispatch, useAppSelector } from '../../@store/store';
+import { setLoggedIn } from '../../@store/user.slice';
 
 const Login = () => {
     const cookies = new Cookies();
 
-    const { isLoggedin, setIsLoggedin } = useContext(ctx);
 
+    const { loggedIn } = useAppSelector(state => state.UserSlice.data);
     const [active_sign, setActive_sign] = useState(true);
-    // const isLoggedin = useContext(ctx);
 
     const [loading, setLoading] = useState(false);
 
-    const [username, setUsername] = useState('user@userland.com');
-    const [password, setPassword] = useState('1234');
+    const [username, setUsername] = useState('sa1@localhost');
+    const [password, setPassword] = useState('password');
 
-    const [error, setError] = useState(false);
+    const [error, setError] = useState<boolean|string>(false);
 
-    const login_post = async (e: any) => {
-        e.preventDefault();
+    const dispatch = useAppDispatch();
+
+    const login_post = () => {
         setLoading(true);
         console.log(username)
-        // fetch_api('login',
-        //     'POST'
-        //     , (data: any) => {
-        //         setTimeout(() => {
-        //             if(!data.token) {
-        //                 setError(data.message || 'An unknown error occured');
-        //                 setLoading(false);
-        //                 return;
-        //             }
-
-                
-        //             if(data.token) {
-        //                 cookies.set('token', data.token, { path: '/', maxAge: 3600 });
-        //                 setIsLoggedin(true);
-        //             }
-        //         }, 1000);
-        //     },
-        //     (err: any) => {
-        //         console.log(err);
-        //         setError(err.message || 'An unknown error occured');
-        //         setLoading(false);
-        //     }
-        // )
 
         fetch('/api/login', {
             method: 'POST',
@@ -61,42 +39,45 @@ const Login = () => {
                 password: password
             })
         })
-        .then(res => {
-            if (res.status === 200) {
-                return res.json();
+            .then(res => {
+                if (res.status === 200) {
+                    return res.json();
+                } else if (res.status === 401) {
+                    throw new Error('Invalid credentials');
+                }
+                throw new Error(res.statusText);
             }
-            throw new Error(res.statusText);
-        }
-        )
-        .then(data => {
-            console.log(data);
-            if(data.token) {
-                cookies.set('token', data.token, { path: '/', maxAge: 3600 });
-                setIsLoggedin(true);
+            )
+            .then(data => {
+                console.log({data});
+                if (data.token) {
+                    cookies.set('token', data.token, { path: '/', maxAge: 3600 });
+                    void dispatch(setLoggedIn(true));
+                }
             }
-        }
-        )
-        .catch(err => {
-            console.log(err);
-            setError(err.message || 'An unknown error occured');
-            setLoading(false);
-        }
-        )
-
-
-
+            )
+            .catch(err => {
+                console.log(err);
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                setTimeout(() => {
+                    setError((err.message as string | undefined) || 'An unknown error occured');
+                    setLoading(false);
+                }, 1500);
+            }
+            )
     }
 
     return (
-        (isLoggedin && <Navigate to="/" />) ||
+        (
+            loggedIn && <Navigate to="/" />) ||
         <div className={styles.login}>
             <div className={styles.login_card}>
 
                 <img src={"/static/media/logo.png"} alt="logo" width="250" style={{
                     marginLeft: '50%',
                     transform: 'translateX(-50%)',
-                    
-                }}/>
+
+                }} />
 
                 <div className={styles.login_sign_switch}>
                     <div className={styles.login_sign_switch_signin + ' ' + (active_sign ? styles.active : '')} onClick={() => setActive_sign(true)}>SIGN IN</div>
@@ -108,10 +89,10 @@ const Login = () => {
                     <div className={styles.login_sign + ' ' + (!active_sign ? styles.active : '')} >
                         <div className={styles.login_sign_signin}>
                             <form>
-                                <input type="text" placeholder='email / username' onChange={(e: any) => setUsername(e.target.value)} defaultValue={username} autoFocus={true}/>
-                                <input type="password" placeholder='Password' onChange={(e: any) => setPassword(e.target.value)} defaultValue={password} />
+                                <input type="text" placeholder='email / username' onChange={(e) => setUsername(e.target.value)} defaultValue={username} autoFocus={true} />
+                                <input type="password" placeholder='Password' onChange={(e) => setPassword(e.target.value)} defaultValue={password} />
                                 <br />
-                                <button type="submit" onClick={login_post} className={styles.login__signInButton}>Sign In</button>
+                                <button type="submit" onClick={() => {login_post()}} className={styles.login__signInButton}>Sign In</button>
 
                                 {/* <button className={styles.google_sign_in}></button> */}
                                 {/* forgot */}
